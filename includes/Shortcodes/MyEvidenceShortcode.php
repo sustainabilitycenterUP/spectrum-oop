@@ -7,6 +7,7 @@ use Spectrum\Evidence\Core\Notices;
 use Spectrum\Evidence\Core\View;
 
 use Spectrum\Evidence\Repositories\EvidenceRepository;
+use Spectrum\Evidence\Services\ExportService;
 
 if (!defined('ABSPATH')) exit;
 
@@ -31,12 +32,35 @@ final class MyEvidenceShortcode {
       $filters['status'] = '';
     }
 
+    $rows = EvidenceRepository::findBySubmitterFiltered($user_id, $filters);
+    if (!empty($_GET['export']) && $_GET['export'] === 'xlsx') {
+      $export_rows = array();
+      foreach ((array)$rows as $r) {
+        $export_rows[] = array(
+          'ID' => (int)$r->id,
+          'Year' => (int)$r->year,
+          'Title' => $r->title,
+          'Status' => $r->status,
+          'Unit' => $r->unit_code,
+          'SDG' => !empty($r->sdg_number) ? ('SDG ' . (int)$r->sdg_number) : '',
+          'Metric Code' => $r->metric_code ?? '',
+          'Updated At' => $r->updated_at,
+          'Created At' => $r->created_at,
+        );
+      }
+      ExportService::outputXlsx(
+        'my-evidence-' . date('Ymd-His') . '.xlsx',
+        array('ID', 'Year', 'Title', 'Status', 'Unit', 'SDG', 'Metric Code', 'Updated At', 'Created At'),
+        $export_rows
+      );
+    }
+
     return View::render('my-evidence', array(
       'notice' => Notices::get($user_id),
       'email'  => $user->user_email,
       'filters' => $filters,
       'years' => EvidenceRepository::distinctYearsBySubmitter($user_id),
-      'rows'   => EvidenceRepository::findBySubmitterFiltered($user_id, $filters),
+      'rows'   => $rows,
     ));
   }
 }
