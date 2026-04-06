@@ -27,7 +27,7 @@ final class ApprovedEvidenceShortcode {
     );
 
     $rows = ApprovedEvidenceRepository::list($filters);
-    if (!empty($_GET['export']) && $_GET['export'] === 'csv') {
+    if (!empty($_GET['export']) && $_GET['export'] === 'xlsx') {
       $export_rows = array();
       foreach ((array)$rows as $r) {
         $export_rows[] = array(
@@ -42,8 +42,8 @@ final class ApprovedEvidenceShortcode {
           'Updated At' => $r->updated_at,
         );
       }
-      ExportService::outputCsv(
-        'approved-evidence-' . date('Ymd-His') . '.csv',
+      ExportService::outputXlsx(
+        'approved-evidence-' . date('Ymd-His') . '.xlsx',
         array('ID', 'Year', 'Title', 'Unit', 'Status', 'SDG', 'Metric Code', 'Metric Title', 'Updated At'),
         $export_rows
       );

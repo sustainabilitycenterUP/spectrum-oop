@@ -46,9 +46,9 @@ include __DIR__ . '/layout-open.php';
         $export_params = array();
         if (!empty($filters['unit_code'])) $export_params['unit_code'] = $filters['unit_code'];
         if (!empty($filters['sdg_number'])) $export_params['sdg_number'] = (int)$filters['sdg_number'];
-        $export_params['export'] = 'csv';
+        $export_params['export'] = 'xlsx';
       ?>
-      <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('approved', $export_params)); ?>">Export CSV</a>
+      <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('approved', $export_params)); ?>">Export XLSX</a>
     </div>
   </form>
 

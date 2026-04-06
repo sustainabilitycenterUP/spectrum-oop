@@ -1,6 +1,4 @@
 <?php
-use Spectrum\Evidence\Core\Url;
-
 if (!defined('ABSPATH')) exit;
 
 include __DIR__ . '/layout-open.php';
@@ -20,24 +18,6 @@ $metric_summary = $metric_summary ?? array();
 </div>
 
 <section class="sp-card">
-
-  <form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:14px;">
-    <div>
-      <label class="sp-label">Tahun</label>
-      <select name="year" class="sp-select" style="min-width:160px;">
-        <option value="">Semua Tahun</option>
-        <?php foreach ((array)$years as $y): ?>
-          <option value="<?php echo (int)$y; ?>" <?php selected($year, (int)$y); ?>>
-            <?php echo esc_html($y); ?>
-          </option>
-        <?php endforeach; ?>
-      </select>
-    </div>
-    <div>
-      <button class="sp-btn-primary" type="submit">Terapkan</button>
-      <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('dashboard')); ?>">Reset</a>
-    </div>
-  </form>
 
   <!-- Cards status -->
   <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;">
