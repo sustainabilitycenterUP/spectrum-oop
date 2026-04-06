@@ -214,6 +214,7 @@ final class DashboardRepository {
     if ($params) {
       $sql = $wpdb->prepare($sql, $params);
     }
+    return $wpdb->get_results($sql);
   }
 
   public static function weeklyCounts($year = 0) {
