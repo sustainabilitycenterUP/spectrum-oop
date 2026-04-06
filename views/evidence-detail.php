@@ -162,7 +162,7 @@ include __DIR__ . '/layout-open.php';
 
     <div class="sp-detail-right">
       <div class="sp-box">
-          <h3 style="margin-top:0;">Status Log</h3>
+          <h3 style="margin-top:0;">Riwayat Evidence</h3>
           <?php if (empty($logs)): ?>
             <div style="color:#6b7280;">Belum ada log.</div>
           <?php else: ?>
@@ -170,6 +170,9 @@ include __DIR__ . '/layout-open.php';
             <?php foreach ($logs as $lg):
               $actor = $lg->actor_id ? get_user_by('id', (int)$lg->actor_id) : null;
               $to = strtoupper((string)$lg->to_status);
+              $actor_name = $actor ? $actor->display_name : 'System';
+              $initial = strtoupper(substr($actor_name, 0, 1));
+              $actor_role = ($actor && user_can($actor->ID, 'manage_options')) ? 'Admin SC' : (($to === 'APPROVED' || $to === 'REJECTED') ? 'Reviewer' : 'Kontributor');
               $action_text = ($to === 'APPROVED')
                 ? 'Evidence disetujui oleh'
                 : (($to === 'REJECTED') ? 'Evidence ditolak oleh' : 'Perubahan diajukan oleh');
@@ -177,14 +180,23 @@ include __DIR__ . '/layout-open.php';
               <div class="sp-timeline-item sp-timeline-<?php echo esc_attr(strtolower($to)); ?>">
                 <div class="sp-timeline-dot"></div>
                 <div class="sp-timeline-content">
-                  <div class="sp-timeline-date"><?php echo esc_html(date_i18n('d M Y H:i', strtotime($lg->created_at))); ?></div>
+                  <div class="sp-timeline-date">📅 <?php echo esc_html(date_i18n('d M Y H:i', strtotime($lg->created_at))); ?></div>
                   <div class="sp-timeline-title">
-                    <?php echo esc_html($action_text); ?>, <?php echo esc_html($actor ? $actor->display_name : 'System'); ?>
+                    📝 <?php echo esc_html($action_text); ?>, <span class="sp-timeline-role"><?php echo esc_html($actor_role); ?></span>
                   </div>
-                  <div class="sp-timeline-flow"><?php echo esc_html(($lg->from_status ?: '—') . ' → ' . $lg->to_status); ?></div>
-                  <span class="sp-status-badge sp-status-<?php echo esc_attr($to); ?>"><?php echo esc_html($to); ?></span>
+                  <div class="sp-timeline-profile">
+                    <div class="sp-timeline-avatar"><?php echo esc_html($initial); ?></div>
+                    <div class="sp-timeline-profile-text">
+                      <div class="sp-timeline-name"><?php echo esc_html($actor_name); ?></div>
+                      <div class="sp-timeline-flow"><?php echo esc_html(($lg->from_status ?: '—') . ' → ' . $lg->to_status); ?></div>
+                      <span class="sp-status-badge sp-status-<?php echo esc_attr($to); ?>"><?php echo esc_html($to); ?></span>
+                    </div>
+                  </div>
                 <?php if (!empty($lg->notes)): ?>
-                    <div class="sp-timeline-note"><?php echo esc_html($lg->notes); ?></div>
+                    <div class="sp-timeline-note">💬 <?php echo esc_html($lg->notes); ?></div>
+                <?php endif; ?>
+                <?php if (!empty($file_url) && $to === 'REJECTED'): ?>
+                    <div><a class="sp-timeline-attachment" target="_blank" href="<?php echo esc_url($file_url); ?>">📄 Download Attachment</a></div>
                 <?php endif; ?>
                 </div>
               </div>
