@@ -6,6 +6,7 @@ use Spectrum\Evidence\Core\Auth;
 use Spectrum\Evidence\Core\View;
 
 use Spectrum\Evidence\Repositories\ApprovedEvidenceRepository;
+use Spectrum\Evidence\Services\ExportService;
 
 if (!defined('ABSPATH')) exit;
 
@@ -25,11 +26,34 @@ final class ApprovedEvidenceShortcode {
       'sdg_number' => $sdg,
     );
 
+    $rows = ApprovedEvidenceRepository::list($filters);
+    if (!empty($_GET['export']) && $_GET['export'] === 'csv') {
+      $export_rows = array();
+      foreach ((array)$rows as $r) {
+        $export_rows[] = array(
+          'ID' => (int)$r->id,
+          'Year' => (int)$r->year,
+          'Title' => $r->title,
+          'Unit' => $r->unit_code,
+          'Status' => $r->status,
+          'SDG' => !empty($r->sdg_number) ? ('SDG ' . (int)$r->sdg_number) : '',
+          'Metric Code' => $r->metric_code ?? '',
+          'Metric Title' => $r->metric_title ?? '',
+          'Updated At' => $r->updated_at,
+        );
+      }
+      ExportService::outputCsv(
+        'approved-evidence-' . date('Ymd-His') . '.csv',
+        array('ID', 'Year', 'Title', 'Unit', 'Status', 'SDG', 'Metric Code', 'Metric Title', 'Updated At'),
+        $export_rows
+      );
+    }
+
     return View::render('approved-evidence', array(
       'active' => 'approved',
       'filters' => $filters,
       'units' => ApprovedEvidenceRepository::distinctUnits(),
-      'rows' => ApprovedEvidenceRepository::list($filters),
+      'rows' => $rows,
     ));
   }
 }
