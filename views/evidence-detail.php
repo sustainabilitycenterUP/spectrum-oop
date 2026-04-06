@@ -170,12 +170,17 @@ include __DIR__ . '/layout-open.php';
             <?php foreach ($logs as $lg):
               $actor = $lg->actor_id ? get_user_by('id', (int)$lg->actor_id) : null;
               $to = strtoupper((string)$lg->to_status);
+              $action_text = ($to === 'APPROVED')
+                ? 'Evidence disetujui oleh'
+                : (($to === 'REJECTED') ? 'Evidence ditolak oleh' : 'Perubahan diajukan oleh');
             ?>
-              <div class="sp-timeline-item">
+              <div class="sp-timeline-item sp-timeline-<?php echo esc_attr(strtolower($to)); ?>">
                 <div class="sp-timeline-dot"></div>
                 <div class="sp-timeline-content">
-                  <div class="sp-timeline-date"><?php echo esc_html($lg->created_at); ?></div>
-                  <div class="sp-timeline-actor"><?php echo esc_html($actor ? $actor->display_name : 'System'); ?></div>
+                  <div class="sp-timeline-date"><?php echo esc_html(date_i18n('d M Y H:i', strtotime($lg->created_at))); ?></div>
+                  <div class="sp-timeline-title">
+                    <?php echo esc_html($action_text); ?>, <?php echo esc_html($actor ? $actor->display_name : 'System'); ?>
+                  </div>
                   <div class="sp-timeline-flow"><?php echo esc_html(($lg->from_status ?: '—') . ' → ' . $lg->to_status); ?></div>
                   <span class="sp-status-badge sp-status-<?php echo esc_attr($to); ?>"><?php echo esc_html($to); ?></span>
                 <?php if (!empty($lg->notes)): ?>
