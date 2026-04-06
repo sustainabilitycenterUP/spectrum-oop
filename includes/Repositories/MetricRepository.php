@@ -66,6 +66,11 @@ final class MetricRepository {
       $params[] = (int)$filters['sdg_number'];
     }
 
+    if (!empty($filters['metric_type'])) {
+      $where .= " AND m.metric_type = %s";
+      $params[] = $filters['metric_type'];
+    }
+
     if (!empty($filters['keyword'])) {
       $where .= " AND (m.metric_code LIKE %s OR m.metric_title LIKE %s OR m.metric_question LIKE %s)";
       $keyword = '%' . $wpdb->esc_like($filters['keyword']) . '%';
