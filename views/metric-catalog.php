@@ -40,9 +40,21 @@ include __DIR__ . '/layout-open.php';
       </select>
     </div>
 
+    <div>
+      <label class="sp-label">Tipe</label>
+      <select name="f_type" class="sp-select" style="min-width:180px;">
+        <option value="">Semua Tipe</option>
+        <?php foreach (array('numeric', 'initiatives', 'policy') as $tp): ?>
+          <option value="<?php echo esc_attr($tp); ?>" <?php selected($filters['metric_type'], $tp); ?>>
+            <?php echo esc_html(ucfirst($tp)); ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+
     <div style="min-width:260px;">
       <label class="sp-label">Kata Kunci</label>
-      <input type="text" name="keyword" class="sp-input" value="<?php echo esc_attr($filters['keyword']); ?>" placeholder="kode metrik / judul / pertanyaan">
+      <input type="text" name="q" class="sp-input" value="<?php echo esc_attr($filters['keyword']); ?>" placeholder="kode metrik / judul / pertanyaan">
     </div>
 
     <div>

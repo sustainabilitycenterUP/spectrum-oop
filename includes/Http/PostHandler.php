@@ -82,6 +82,12 @@ final class PostHandler {
     $decision = sanitize_text_field($_POST['review_action']); // approve|reject
     $notes = sanitize_textarea_field($_POST['review_notes'] ?? '');
 
+    if ($decision === 'reject' && $notes === '') {
+      Notices::set(Auth::userId(), 'error', 'Alasan reject wajib diisi.');
+      wp_safe_redirect(Url::page('review'));
+      exit;
+    }
+
     $mapped = ($decision === 'approve') ? 'APPROVED' : (($decision === 'reject') ? 'REJECTED' : '');
 
     $res = ReviewService::applyDecision($evidence_id, $mapped, $notes);

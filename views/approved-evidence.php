@@ -42,6 +42,13 @@ include __DIR__ . '/layout-open.php';
     <div>
       <button class="sp-btn-primary" type="submit">Terapkan Filter</button>
       <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('approved')); ?>">Reset</a>
+      <?php
+        $export_params = array();
+        if (!empty($filters['unit_code'])) $export_params['unit_code'] = $filters['unit_code'];
+        if (!empty($filters['sdg_number'])) $export_params['sdg_number'] = (int)$filters['sdg_number'];
+        $export_params['export'] = 'xlsx';
+      ?>
+      <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('approved', $export_params)); ?>">Export XLSX</a>
     </div>
   </form>
 
