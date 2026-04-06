@@ -59,6 +59,9 @@ include __DIR__ . '/layout-open.php';
                   <?php wp_nonce_field('review_action_' . $r->id); ?>
                   <input type="hidden" name="review_action" value="reject">
                   <input type="hidden" name="evidence_id" value="<?php echo (int)$r->id; ?>">
+                  <textarea name="review_notes" placeholder="Alasan reject (wajib)"
+                    required
+                    style="width:220px;vertical-align:middle;border-radius:8px;border:1px solid #ccc;padding:6px;font-size:12px;"></textarea>
                   <button class="sp-btn-secondary" style="margin-left:6px;">Reject</button>
                 </form>
               </td>
