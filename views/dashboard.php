@@ -54,26 +54,21 @@ $metric_summary = $metric_summary ?? array();
   <div style="display:grid;grid-template-columns: 1fr; gap:14px; margin-top:16px;">
     <!-- UNIT -->
     <div class="sp-box">
-      <h3 style="margin-top:0;">
-        Progress per Unit
-        <span title="Dihitung berdasarkan cakupan metrik MANDATORY (status SUBMITTED/APPROVED)" style="cursor:help;color:#6b7280;">ⓘ</span>
-      </h3>
-
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <h3 style="margin:0;">
+          Progress per Unit
+          <span title="Dihitung berdasarkan cakupan metrik MANDATORY (status SUBMITTED/APPROVED)" style="cursor:help;color:#6b7280;">ⓘ</span>
+        </h3>
+      </div>
+      <div style="font-size:12px;color:#6b7280;margin-top:4px;">
+        Semua unit ditampilkan (termasuk yang progress 0%).
+      </div>
       <?php if (empty($unit)): ?>
-        <div style="color:#6b7280;">Belum ada data unit.</div>
+        <div style="color:#6b7280;margin-top:10px;">Belum ada data unit.</div>
       <?php else: ?>
-        <?php foreach ($unit as $u): ?>
-          <div style="margin-bottom:12px;">
-            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
-              <div><?php echo esc_html($u->unit_code ?: '—'); ?></div>
-              <div><?php echo (int)$u->submitted_total; ?> / <?php echo (int)$u->mandatory_total; ?> (<?php echo (int)$u->percent; ?>%)</div>
-            </div>
-
-            <div style="background:#eee;height:8px;border-radius:4px;">
-              <div style="width:<?php echo min((int)$u->percent,100); ?>%;background:#1d4ed8;height:8px;border-radius:4px;"></div>
-            </div>
-          </div>
-        <?php endforeach; ?>
+        <div style="margin-top:12px;">
+          <canvas id="sp-unit-progress-chart" style="max-height:480px;"></canvas>
+        </div>
       <?php endif; ?>
     </div>
   </div>
@@ -112,9 +107,20 @@ $metric_summary = $metric_summary ?? array();
 
   <!-- SDG Evidence Status Chart -->
   <div class="sp-box" style="margin-top:14px;">
-    <h3 style="margin:0;">SDG Evidence Status</h3>
-    <div style="font-size:12px;color:#6b7280;margin-top:4px;">
-      Grouped bar chart jumlah evidence per SDG (Approved 100%, Submitted 50%, Rejected 20%).
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+      <h3 style="margin:0;">SDG Evidence Status</h3>
+      <label style="font-size:12px;color:#334155;display:flex;align-items:center;gap:6px;">
+        Filter Status
+        <select id="sp-sdg-status-filter" class="sp-select" style="width:auto;min-width:140px;padding:4px 8px;">
+          <option value="ALL">Semua</option>
+          <option value="APPROVED">Approved</option>
+          <option value="SUBMITTED">Submitted</option>
+          <option value="REJECTED">Rejected</option>
+        </select>
+      </label>
+    </div>
+    <div style="font-size:12px;color:#6b7280;margin-top:6px;">
+      Grouped bar chart jumlah evidence per SDG (Approved 100%, Submitted 50%, Rejected 20% warna SDG).
     </div>
     <div style="margin-top:12px;">
       <canvas id="sp-sdg-evidence-chart" style="max-height:460px;"></canvas>
@@ -162,6 +168,7 @@ $metric_summary = $metric_summary ?? array();
 <script>
 (function(){
   const rows = <?php echo wp_json_encode(array_values((array)$sdg_summary)); ?>;
+  const unitRows = <?php echo wp_json_encode(array_values((array)$unit)); ?>;
   const labels = rows.map(r => 'SDG ' + (r.sdg_number || 0));
   const approved = rows.map(r => Number(r.approved || 0));
   const submitted = rows.map(r => Number(r.submitted || 0));
@@ -189,14 +196,24 @@ $metric_summary = $metric_summary ?? array();
   const el = document.getElementById('sp-sdg-evidence-chart');
   if (!el || typeof Chart === 'undefined') return;
 
-  new Chart(el, {
+  const commonTooltip = {
+    backgroundColor: '#dcfce7',
+    titleColor: '#166534',
+    bodyColor: '#14532d',
+    borderColor: '#86efac',
+    borderWidth: 1,
+    titleFont: { size: 11, weight: '600' },
+    bodyFont: { size: 11 }
+  };
+
+  const sdgChart = new Chart(el, {
     type: 'bar',
     data: {
       labels,
       datasets: [
-        { label:'Approved', data: approved, backgroundColor: approvedColors },
-        { label:'Submitted', data: submitted, backgroundColor: submittedColors },
-        { label:'Rejected', data: rejected, backgroundColor: rejectedColors }
+        { key:'APPROVED', label:'Approved', data: approved, backgroundColor: approvedColors },
+        { key:'SUBMITTED', label:'Submitted', data: submitted, backgroundColor: submittedColors },
+        { key:'REJECTED', label:'Rejected', data: rejected, backgroundColor: rejectedColors }
       ]
     },
     options: {
@@ -204,6 +221,7 @@ $metric_summary = $metric_summary ?? array();
       plugins: {
         legend: { position: 'top' },
         tooltip: {
+          ...commonTooltip,
           callbacks: {
             label: function(ctx){ return `${ctx.dataset.label}: ${ctx.raw}`; }
           }
@@ -220,6 +238,65 @@ $metric_summary = $metric_summary ?? array();
       }
     }
   });
+
+  const statusFilter = document.getElementById('sp-sdg-status-filter');
+  if (statusFilter) {
+    statusFilter.addEventListener('change', function(){
+      const selected = this.value;
+      sdgChart.data.datasets.forEach(function(ds){
+        ds.hidden = (selected !== 'ALL' && ds.key !== selected);
+      });
+      sdgChart.update();
+    });
+  }
+
+  const unitCanvas = document.getElementById('sp-unit-progress-chart');
+  if (unitCanvas && unitRows.length) {
+    const unitLabels = unitRows.map(u => u.unit_code || '—');
+    const unitPercent = unitRows.map(u => Number(u.percent || 0));
+    const submittedTotal = unitRows.map(u => Number(u.submitted_total || 0));
+    const mandatoryTotal = unitRows.map(u => Number(u.mandatory_total || 0));
+
+    new Chart(unitCanvas, {
+      type: 'bar',
+      data: {
+        labels: unitLabels,
+        datasets: [{
+          label: 'Progress (%)',
+          data: unitPercent,
+          backgroundColor: '#93c5fd',
+          borderColor: '#2563eb',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            ...commonTooltip,
+            callbacks: {
+              title: function(items){ return items[0] ? items[0].label : ''; },
+              label: function(ctx){
+                const idx = ctx.dataIndex;
+                return `Progress: ${ctx.raw}% (${submittedTotal[idx]} / ${mandatoryTotal[idx]} mandatory)`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { maxRotation: 45, minRotation: 45 }
+          },
+          y: {
+            beginAtZero: true,
+            max: 100,
+            title: { display: true, text: 'Persentase Progress (%)' }
+          }
+        }
+      }
+    });
+  }
 })();
 </script>
 
