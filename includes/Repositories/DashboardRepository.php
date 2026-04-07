@@ -55,7 +55,8 @@ final class DashboardRepository {
         s.sdg_title,
         COUNT(DISTINCT e.id) AS total,
         COUNT(DISTINCT CASE WHEN e.status='SUBMITTED' THEN e.id END) AS submitted,
-        COUNT(DISTINCT CASE WHEN e.status='APPROVED' THEN e.id END) AS approved
+        COUNT(DISTINCT CASE WHEN e.status='APPROVED' THEN e.id END) AS approved,
+        COUNT(DISTINCT CASE WHEN e.status='REJECTED' THEN e.id END) AS rejected
       FROM {$s} s
       LEFT JOIN {$m} m ON m.sdg_number = s.sdg_number
       LEFT JOIN {$em} em ON em.metric_id = m.id

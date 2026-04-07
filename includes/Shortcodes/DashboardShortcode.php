@@ -14,7 +14,8 @@ final class DashboardShortcode {
 
     Assets::enqueueOnce();
 
-    $year = isset($_GET['year']) ? (int)$_GET['year'] : 0;
+    // filter tahun di-hold dulu: dashboard menampilkan ringkasan seluruh data
+    $year = 0;
 
     $data = array(
       'active' => 'dashboard',
