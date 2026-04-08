@@ -253,45 +253,59 @@ $metric_summary = $metric_summary ?? array();
   const unitCanvas = document.getElementById('sp-unit-progress-chart');
   if (unitCanvas && unitRows.length) {
     const unitLabels = unitRows.map(u => u.unit_code || '—');
-    const unitPercent = unitRows.map(u => Number(u.percent || 0));
-    const submittedTotal = unitRows.map(u => Number(u.submitted_total || 0));
+    const approvedTotal = unitRows.map(u => Number(u.approved_total || 0));
+    const noDataTotal = unitRows.map(u => Number(u.no_data_total || 0));
     const mandatoryTotal = unitRows.map(u => Number(u.mandatory_total || 0));
 
     new Chart(unitCanvas, {
       type: 'bar',
       data: {
         labels: unitLabels,
-        datasets: [{
-          label: 'Progress (%)',
-          data: unitPercent,
-          backgroundColor: '#93c5fd',
-          borderColor: '#2563eb',
-          borderWidth: 1
-        }]
+        datasets: [
+          {
+            label: 'Approved',
+            data: approvedTotal,
+            backgroundColor: '#2563eb',
+            borderColor: '#1d4ed8',
+            borderWidth: 1
+          },
+          {
+            label: 'NO Data',
+            data: noDataTotal,
+            backgroundColor: '#fb923c',
+            borderColor: '#ea580c',
+            borderWidth: 1
+          }
+        ]
       },
       options: {
         responsive: true,
         plugins: {
-          legend: { display: false },
+          legend: { display: true, position: 'top' },
           tooltip: {
             ...commonTooltip,
             callbacks: {
               title: function(items){ return items[0] ? items[0].label : ''; },
               label: function(ctx){
                 const idx = ctx.dataIndex;
-                return `Progress: ${ctx.raw}% (${submittedTotal[idx]} / ${mandatoryTotal[idx]} mandatory)`;
+                const approved = approvedTotal[idx];
+                const noData = noDataTotal[idx];
+                const mandatory = mandatoryTotal[idx];
+                const progress = mandatory > 0 ? Math.round(((approved + noData) / mandatory) * 100) : 0;
+                return `${ctx.dataset.label}: ${ctx.raw} (Progress ${progress}% | ${approved + noData}/${mandatory})`;
               }
             }
           }
         },
         scales: {
           x: {
+            stacked: true,
             ticks: { maxRotation: 45, minRotation: 45 }
           },
           y: {
             beginAtZero: true,
-            max: 100,
-            title: { display: true, text: 'Persentase Progress (%)' }
+            stacked: true,
+            title: { display: true, text: 'Jumlah Metrik Mandatory' }
           }
         }
       }

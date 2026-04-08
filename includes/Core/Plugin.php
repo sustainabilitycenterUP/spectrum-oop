@@ -5,6 +5,7 @@ use Spectrum\Evidence\Http\PostHandler;
 
 use Spectrum\Evidence\Shortcodes\MyEvidenceShortcode;
 use Spectrum\Evidence\Shortcodes\EvidenceFormShortcode;
+use Spectrum\Evidence\Shortcodes\EvidenceFormV2Shortcode;
 use Spectrum\Evidence\Shortcodes\EvidenceDetailShortcode;
 use Spectrum\Evidence\Shortcodes\ReviewQueueShortcode;
 use Spectrum\Evidence\Shortcodes\DashboardShortcode;
@@ -22,6 +23,7 @@ final class Plugin {
 
     add_shortcode('spectrum_my_evidence', array(MyEvidenceShortcode::class, 'render'));
     add_shortcode('spectrum_evidence_form', array(EvidenceFormShortcode::class, 'render'));
+    add_shortcode('spectrum_evidence_form_v2', array(EvidenceFormV2Shortcode::class, 'render'));
     add_shortcode('spectrum_evidence_detail', array(EvidenceDetailShortcode::class, 'render'));
     add_shortcode('spectrum_review_queue', array(ReviewQueueShortcode::class, 'render'));
     // add_shortcode('spectrum_dashboard', array(DashboardShortcode::class, 'render'));

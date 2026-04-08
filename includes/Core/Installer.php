@@ -36,5 +36,20 @@ final class Installer {
       KEY actor_id (actor_id)
     ) {$charset};";
     dbDelta($sqlLog);
+
+    $tNo = Db::table('spectrum_metric_no_data');
+    $sqlNo = "CREATE TABLE {$tNo} (
+      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+      unit_code VARCHAR(255) NOT NULL,
+      year INT NOT NULL,
+      metric_id BIGINT UNSIGNED NOT NULL,
+      submitter_id BIGINT UNSIGNED NULL,
+      created_at DATETIME NOT NULL,
+      PRIMARY KEY (id),
+      UNIQUE KEY uniq_unit_year_metric (unit_code, year, metric_id),
+      KEY idx_metric (metric_id),
+      KEY idx_unit_year (unit_code, year)
+    ) {$charset};";
+    dbDelta($sqlNo);
   }
 }

@@ -77,6 +77,7 @@ final class DashboardRepository {
     $fma = Db::table('spectrum_function_metric_assignment');
     $em  = Db::table('spectrum_evidence_metric');
     $e   = Db::table('spectrum_evidence');
+    $nd  = Db::table('spectrum_metric_no_data');
 
     $where = "WHERE f.category = 'MANDATORY'";
     $params = array();
@@ -89,16 +90,26 @@ final class DashboardRepository {
     $sql = "
       SELECT
         f.unit_code,
-        COUNT(DISTINCT CONCAT(f.year, '-', f.metric_id)) AS mandatory_total,
-        COUNT(DISTINCT CASE WHEN e.status IN ('SUBMITTED','APPROVED') THEN CONCAT(f.year, '-', f.metric_id) END) AS submitted_total
+        COUNT(DISTINCT f.metric_id) AS mandatory_total,
+        COUNT(DISTINCT CASE
+          WHEN EXISTS (
+            SELECT 1
+            FROM {$em} em2
+            INNER JOIN {$e} e2 ON e2.id = em2.evidence_id
+            WHERE em2.metric_id = f.metric_id
+              AND e2.unit_code = f.unit_code
+              AND e2.year = f.year
+              AND e2.status = 'APPROVED'
+          ) THEN f.metric_id
+        END) AS approved_total,
+        COUNT(DISTINCT CASE WHEN nd.metric_id IS NOT NULL THEN f.metric_id END) AS no_data_total
       FROM {$fma} f
-      LEFT JOIN {$em} em ON em.metric_id = f.metric_id
-      LEFT JOIN {$e} e ON e.id = em.evidence_id
-                       AND e.unit_code = f.unit_code
-                       AND e.year = f.year
+      LEFT JOIN {$nd} nd ON nd.metric_id = f.metric_id
+                        AND nd.unit_code = f.unit_code
+                        AND nd.year = f.year
       {$where}
       GROUP BY f.unit_code
-      ORDER BY submitted_total DESC, f.unit_code ASC
+      ORDER BY approved_total DESC, no_data_total DESC, f.unit_code ASC
     ";
 
     if (!empty($params)) {
@@ -108,8 +119,10 @@ final class DashboardRepository {
     $rows = $wpdb->get_results($sql);
     foreach ((array)$rows as $r) {
       $mandatory = (int)($r->mandatory_total ?? 0);
-      $submitted = (int)($r->submitted_total ?? 0);
-      $r->percent = $mandatory > 0 ? (int)round(($submitted / $mandatory) * 100) : 0;
+      $approved = (int)($r->approved_total ?? 0);
+      $no_data = (int)($r->no_data_total ?? 0);
+      $r->submitted_total = $approved + $no_data;
+      $r->percent = $mandatory > 0 ? (int)round((($approved + $no_data) / $mandatory) * 100) : 0;
     }
 
     return $rows;
