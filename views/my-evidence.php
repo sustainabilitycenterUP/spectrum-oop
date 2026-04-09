@@ -70,6 +70,15 @@ include __DIR__ . '/layout-open.php';
       <div>
         <button class="sp-btn-primary" type="submit">Terapkan</button>
         <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('my')); ?>">Reset</a>
+        <?php
+          $export_params = array();
+          if (!empty($filters['year'])) $export_params['f_year'] = (int)$filters['year'];
+          if (!empty($filters['status'])) $export_params['f_status'] = $filters['status'];
+          if (!empty($filters['sdg_number'])) $export_params['f_sdg'] = (int)$filters['sdg_number'];
+          if (!empty($filters['keyword'])) $export_params['q'] = $filters['keyword'];
+          $export_params['export'] = 'csv';
+        ?>
+        <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('my', $export_params)); ?>">Export CSV</a>
       </div>
     </form>
 
@@ -120,6 +129,15 @@ include __DIR__ . '/layout-open.php';
       <div>
         <button class="sp-btn-primary" type="submit">Terapkan</button>
         <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('my')); ?>">Reset</a>
+        <?php
+          $export_params = array();
+          if (!empty($filters['year'])) $export_params['f_year'] = (int)$filters['year'];
+          if (!empty($filters['status'])) $export_params['f_status'] = $filters['status'];
+          if (!empty($filters['sdg_number'])) $export_params['f_sdg'] = (int)$filters['sdg_number'];
+          if (!empty($filters['keyword'])) $export_params['q'] = $filters['keyword'];
+          $export_params['export'] = 'csv';
+        ?>
+        <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('my', $export_params)); ?>">Export CSV</a>
       </div>
     </form>
 

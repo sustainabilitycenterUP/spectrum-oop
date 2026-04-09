@@ -35,6 +35,17 @@ include __DIR__ . '/layout-open.php';
           <div class="sp-k">Unit</div><div><?php echo esc_html($ev->unit_code); ?></div>
           <div class="sp-k">Status</div><div><span class="sp-pill"><?php echo esc_html($ev->status); ?></span></div>
           <div class="sp-k">Last Update</div><div><?php echo esc_html($ev->updated_at); ?></div>
+          <div class="sp-k">SDG</div><div><?php echo !empty($selected_metric->sdg_number) ? esc_html('SDG ' . $selected_metric->sdg_number) : '—'; ?></div>
+          <div class="sp-k">Metric</div>
+          <div>
+            <?php
+              echo !empty($selected_metric->metric_code)
+                ? esc_html($selected_metric->metric_code . ' – ' . $selected_metric->metric_title)
+                : '—';
+            ?>
+          </div>
+          <div class="sp-k">Metric Question</div>
+          <div><?php echo !empty($selected_metric->metric_question) ? esc_html($selected_metric->metric_question) : '—'; ?></div>
           <div class="sp-k">Link</div>
           <div>
             <?php echo $ev->link_url ? '<a target="_blank" href="'.esc_url($ev->link_url).'">Buka Link</a>' : '—'; ?>
@@ -151,22 +162,46 @@ include __DIR__ . '/layout-open.php';
 
     <div class="sp-detail-right">
       <div class="sp-box">
-          <h3 style="margin-top:0;">Status Log</h3>
+          <h3 style="margin-top:0;">Riwayat Evidence</h3>
           <?php if (empty($logs)): ?>
             <div style="color:#6b7280;">Belum ada log.</div>
           <?php else: ?>
+            <div class="sp-timeline">
             <?php foreach ($logs as $lg):
               $actor = $lg->actor_id ? get_user_by('id', (int)$lg->actor_id) : null;
+              $to = strtoupper((string)$lg->to_status);
+              $actor_name = $actor ? $actor->display_name : 'System';
+              $initial = strtoupper(substr($actor_name, 0, 1));
+              $actor_role = ($actor && user_can($actor->ID, 'manage_options')) ? 'Admin SC' : (($to === 'APPROVED' || $to === 'REJECTED') ? 'Reviewer' : 'Kontributor');
+              $action_text = ($to === 'APPROVED')
+                ? 'Evidence disetujui oleh'
+                : (($to === 'REJECTED') ? 'Evidence ditolak oleh' : 'Perubahan diajukan oleh');
             ?>
-              <div style="margin-bottom:12px;border-bottom:1px solid #eee;padding-bottom:8px;">
-                <strong><?php echo esc_html($actor ? $actor->display_name : 'System'); ?></strong><br>
-                <small><?php echo esc_html($lg->created_at); ?></small><br>
-                <?php echo esc_html(($lg->from_status ?: '—') . ' → ' . $lg->to_status); ?>
+              <div class="sp-timeline-item sp-timeline-<?php echo esc_attr(strtolower($to)); ?>">
+                <div class="sp-timeline-dot"></div>
+                <div class="sp-timeline-content">
+                  <div class="sp-timeline-date">📅 <?php echo esc_html(date_i18n('d M Y H:i', strtotime($lg->created_at))); ?></div>
+                  <div class="sp-timeline-title">
+                    📝 <?php echo esc_html($action_text); ?>, <span class="sp-timeline-role"><?php echo esc_html($actor_role); ?></span>
+                  </div>
+                  <div class="sp-timeline-profile">
+                    <div class="sp-timeline-avatar"><?php echo esc_html($initial); ?></div>
+                    <div class="sp-timeline-profile-text">
+                      <div class="sp-timeline-name"><?php echo esc_html($actor_name); ?></div>
+                      <div class="sp-timeline-flow"><?php echo esc_html(($lg->from_status ?: '—') . ' → ' . $lg->to_status); ?></div>
+                      <span class="sp-status-badge sp-status-<?php echo esc_attr($to); ?>"><?php echo esc_html($to); ?></span>
+                    </div>
+                  </div>
                 <?php if (!empty($lg->notes)): ?>
-                  <div style="color:#6b7280;margin-top:4px;"><?php echo esc_html($lg->notes); ?></div>
+                    <div class="sp-timeline-note">💬 <?php echo esc_html($lg->notes); ?></div>
                 <?php endif; ?>
+                <?php if (!empty($file_url) && $to === 'REJECTED'): ?>
+                    <div><a class="sp-timeline-attachment" target="_blank" href="<?php echo esc_url($file_url); ?>">📄 Download Attachment</a></div>
+                <?php endif; ?>
+                </div>
               </div>
             <?php endforeach; ?>
+            </div>
           <?php endif; ?>
         </div>
       </div>

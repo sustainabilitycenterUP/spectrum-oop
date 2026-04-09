@@ -28,7 +28,7 @@ final class ApprovedEvidenceRepository {
     }
 
     $sql = "
-      SELECT e.id, e.year, e.title, e.unit_code, e.status, e.updated_at,
+      SELECT e.id, e.year, e.title, e.summary, e.link_url, e.unit_code, e.status, e.updated_at,
              m.sdg_number, m.metric_code, m.metric_title
       FROM {$e} e
       LEFT JOIN {$em} em ON em.evidence_id = e.id

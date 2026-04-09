@@ -105,23 +105,31 @@ final class EvidenceRepository {
   public static function listForReview($status = '') {
     global $wpdb;
     $t = self::table();
+    $em = Db::table('spectrum_evidence_metric');
+    $m = Db::table('spectrum_metric');
 
     if ($status) {
       return $wpdb->get_results($wpdb->prepare(
-        "SELECT id, year, title, unit_code, status, updated_at, created_at
-         FROM {$t}
-         WHERE status=%s
-         ORDER BY updated_at DESC, created_at DESC",
+        "SELECT e.id, e.unit_code, e.status, e.updated_at, e.created_at,
+                m.sdg_number, m.metric_code, m.metric_title
+         FROM {$t} e
+         LEFT JOIN {$em} em ON em.evidence_id = e.id
+         LEFT JOIN {$m} m ON m.id = em.metric_id
+         WHERE e.status=%s
+         ORDER BY e.updated_at DESC, e.created_at DESC",
         $status
       ));
     }
 
     // default queue: hanya SUBMITTED
     return $wpdb->get_results(
-      "SELECT id, year, title, unit_code, status, updated_at, created_at
-       FROM {$t}
-       WHERE status='SUBMITTED'
-       ORDER BY updated_at DESC, created_at DESC"
+      "SELECT e.id, e.unit_code, e.status, e.updated_at, e.created_at,
+              m.sdg_number, m.metric_code, m.metric_title
+       FROM {$t} e
+       LEFT JOIN {$em} em ON em.evidence_id = e.id
+       LEFT JOIN {$m} m ON m.id = em.metric_id
+       WHERE e.status='SUBMITTED'
+       ORDER BY e.updated_at DESC, e.created_at DESC"
     );
   }
 }

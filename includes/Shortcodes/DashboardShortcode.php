@@ -14,7 +14,8 @@ final class DashboardShortcode {
 
     Assets::enqueueOnce();
 
-    $year = isset($_GET['year']) ? (int)$_GET['year'] : 0;
+    // sementara dashboard difokuskan untuk metrik tahun 2027
+    $year = 2027;
 
     $data = array(
       'active' => 'dashboard',
