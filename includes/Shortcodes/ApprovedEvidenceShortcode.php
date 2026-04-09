@@ -27,7 +27,7 @@ final class ApprovedEvidenceShortcode {
     );
 
     $rows = ApprovedEvidenceRepository::list($filters);
-    if (!empty($_GET['export']) && $_GET['export'] === 'xlsx') {
+    if (!empty($_GET['export']) && $_GET['export'] === 'csv') {
       $export_rows = array();
       foreach ((array)$rows as $r) {
         $export_rows[] = array(
@@ -39,12 +39,14 @@ final class ApprovedEvidenceShortcode {
           'SDG' => !empty($r->sdg_number) ? ('SDG ' . (int)$r->sdg_number) : '',
           'Metric Code' => $r->metric_code ?? '',
           'Metric Title' => $r->metric_title ?? '',
+          'Document Link' => $r->link_url ?? '',
+          'Evidence Note' => $r->summary ?? '',
           'Updated At' => $r->updated_at,
         );
       }
-      ExportService::outputXlsx(
-        'approved-evidence-' . date('Ymd-His') . '.xlsx',
-        array('ID', 'Year', 'Title', 'Unit', 'Status', 'SDG', 'Metric Code', 'Metric Title', 'Updated At'),
+      ExportService::outputCsv(
+        'approved-evidence-' . date('Ymd-His') . '.csv',
+        array('ID', 'Year', 'Title', 'Unit', 'Status', 'SDG', 'Metric Code', 'Metric Title', 'Document Link', 'Evidence Note', 'Updated At'),
         $export_rows
       );
     }

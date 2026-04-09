@@ -76,9 +76,9 @@ include __DIR__ . '/layout-open.php';
           if (!empty($filters['status'])) $export_params['f_status'] = $filters['status'];
           if (!empty($filters['sdg_number'])) $export_params['f_sdg'] = (int)$filters['sdg_number'];
           if (!empty($filters['keyword'])) $export_params['q'] = $filters['keyword'];
-          $export_params['export'] = 'xlsx';
+          $export_params['export'] = 'csv';
         ?>
-        <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('my', $export_params)); ?>">Export XLSX</a>
+        <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('my', $export_params)); ?>">Export CSV</a>
       </div>
     </form>
 
@@ -135,9 +135,9 @@ include __DIR__ . '/layout-open.php';
           if (!empty($filters['status'])) $export_params['f_status'] = $filters['status'];
           if (!empty($filters['sdg_number'])) $export_params['f_sdg'] = (int)$filters['sdg_number'];
           if (!empty($filters['keyword'])) $export_params['q'] = $filters['keyword'];
-          $export_params['export'] = 'xlsx';
+          $export_params['export'] = 'csv';
         ?>
-        <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('my', $export_params)); ?>">Export XLSX</a>
+        <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('my', $export_params)); ?>">Export CSV</a>
       </div>
     </form>
 

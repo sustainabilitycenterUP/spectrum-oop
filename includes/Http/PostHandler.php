@@ -10,6 +10,7 @@ use Spectrum\Evidence\Services\ReviewService;
 use Spectrum\Evidence\Services\DeleteService;
 use Spectrum\Evidence\Repositories\FunctionMetricAssignmentRepository;
 use Spectrum\Evidence\Repositories\MetricNoDataRepository;
+use Spectrum\Evidence\Repositories\MetricCoverageRepository;
 
 if (!defined('ABSPATH')) exit;
 
@@ -88,11 +89,21 @@ final class PostHandler {
 
     $decision = sanitize_text_field($_POST['review_action']); // approve|reject
     $notes = sanitize_textarea_field($_POST['review_notes'] ?? '');
+    $score = isset($_POST['review_score']) ? (int)$_POST['review_score'] : 0;
 
     if ($decision === 'reject' && $notes === '') {
       Notices::set(Auth::userId(), 'error', 'Alasan reject wajib diisi.');
       wp_safe_redirect(Url::page('review'));
       exit;
+    }
+    if ($decision === 'approve' && ($score < 1 || $score > 5)) {
+      Notices::set(Auth::userId(), 'error', 'Score wajib diisi saat approve.');
+      wp_safe_redirect(Url::page('review'));
+      exit;
+    }
+
+    if ($decision === 'approve') {
+      $notes = trim(($notes ? $notes . ' | ' : '') . 'Score: ' . $score . '/5');
     }
 
     $mapped = ($decision === 'approve') ? 'APPROVED' : (($decision === 'reject') ? 'REJECTED' : '');
@@ -147,6 +158,10 @@ final class PostHandler {
         Notices::set($user_id, 'error', 'Metrik ini bukan mandatory untuk unit Anda.');
         self::redirectBack();
       }
+      if (MetricCoverageRepository::isMetricCompleteForUnit($unit_code, $year, $metric_id)) {
+        Notices::set($user_id, 'error', 'Metrik ini sudah memiliki evidence approved, status NO tidak diperlukan.');
+        self::redirectBack();
+      }
 
       MetricNoDataRepository::mark($unit_code, $year, $metric_id, $user_id);
       Notices::set($user_id, 'success', 'Status NO berhasil disimpan untuk metrik mandatory ini.');
@@ -160,6 +175,10 @@ final class PostHandler {
     if (is_wp_error($result)) {
       Notices::set($user_id, 'error', $result->get_error_message());
       self::redirectBack();
+    }
+
+    if ($mode === 'MANDATORY' && $metric_id > 0) {
+      MetricNoDataRepository::unmark(Auth::unitCode($user_id), $year, $metric_id);
     }
 
     $msg = ($action === 'submit')

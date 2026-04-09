@@ -41,4 +41,14 @@ final class MetricNoDataRepository {
       $unit_code, (int)$year
     ));
   }
+
+  public static function unmark($unit_code, $year, $metric_id) {
+    global $wpdb;
+    $t = self::table();
+    return $wpdb->delete($t, array(
+      'unit_code' => $unit_code,
+      'year' => (int)$year,
+      'metric_id' => (int)$metric_id,
+    ), array('%s','%d','%d'));
+  }
 }

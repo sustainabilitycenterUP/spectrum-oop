@@ -102,7 +102,19 @@ final class DashboardRepository {
               AND e2.status = 'APPROVED'
           ) THEN f.metric_id
         END) AS approved_total,
-        COUNT(DISTINCT CASE WHEN nd.metric_id IS NOT NULL THEN f.metric_id END) AS no_data_total
+        COUNT(DISTINCT CASE
+          WHEN nd.metric_id IS NOT NULL
+           AND NOT EXISTS (
+             SELECT 1
+             FROM {$em} em3
+             INNER JOIN {$e} e3 ON e3.id = em3.evidence_id
+             WHERE em3.metric_id = f.metric_id
+               AND e3.unit_code = f.unit_code
+               AND e3.year = f.year
+               AND e3.status = 'APPROVED'
+           )
+          THEN f.metric_id
+        END) AS no_data_total
       FROM {$fma} f
       LEFT JOIN {$nd} nd ON nd.metric_id = f.metric_id
                         AND nd.unit_code = f.unit_code
@@ -121,8 +133,9 @@ final class DashboardRepository {
       $mandatory = (int)($r->mandatory_total ?? 0);
       $approved = (int)($r->approved_total ?? 0);
       $no_data = (int)($r->no_data_total ?? 0);
-      $r->submitted_total = $approved + $no_data;
-      $r->percent = $mandatory > 0 ? (int)round((($approved + $no_data) / $mandatory) * 100) : 0;
+      $effective = min($mandatory, $approved + $no_data);
+      $r->submitted_total = $effective;
+      $r->percent = $mandatory > 0 ? (int)round(($effective / $mandatory) * 100) : 0;
     }
 
     return $rows;

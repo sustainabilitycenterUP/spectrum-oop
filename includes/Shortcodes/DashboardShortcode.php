@@ -14,8 +14,8 @@ final class DashboardShortcode {
 
     Assets::enqueueOnce();
 
-    // filter tahun di-hold dulu: dashboard menampilkan ringkasan seluruh data
-    $year = 0;
+    // sementara dashboard difokuskan untuk metrik tahun 2027
+    $year = 2027;
 
     $data = array(
       'active' => 'dashboard',

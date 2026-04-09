@@ -73,36 +73,26 @@ $metric_summary = $metric_summary ?? array();
     </div>
   </div>
 
-  <!-- Evidence per SDG -->
+  <!-- SDG Evidence Status Chart -->
   <div class="sp-box" style="margin-top:14px;">
-    <h3 style="margin:0;">Evidence per SDG</h3>
-
-    <?php if (empty($sdg_summary)): ?>
-      <div style="color:#6b7280;margin-top:8px;">Belum ada data SDG.</div>
-    <?php else: ?>
-      <table class="sp-table" style="margin-top:10px;">
-        <thead>
-          <tr>
-            <th style="width:70px;">SDG</th>
-            <th>Topic</th>
-            <th>Total</th>
-            <th>Submitted</th>
-            <th>Approved</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($sdg_summary as $row): ?>
-            <tr>
-              <td><strong><?php echo (int)$row->sdg_number; ?></strong></td>
-              <td><?php echo esc_html($row->sdg_title); ?></td>
-              <td><?php echo (int)$row->total; ?></td>
-              <td><?php echo (int)$row->submitted; ?></td>
-              <td><?php echo (int)$row->approved; ?></td>
-            </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    <?php endif; ?>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+      <h3 style="margin:0;">SDG Evidence Status</h3>
+      <label style="font-size:12px;color:#334155;display:flex;align-items:center;gap:6px;">
+        Filter Status
+        <select id="sp-sdg-status-filter" class="sp-select" style="width:auto;min-width:140px;padding:4px 8px;">
+          <option value="ALL">Semua</option>
+          <option value="APPROVED">Approved</option>
+          <option value="SUBMITTED">Submitted</option>
+          <option value="REJECTED">Rejected</option>
+        </select>
+      </label>
+    </div>
+    <div style="font-size:12px;color:#6b7280;margin-top:6px;">
+      Grouped bar chart jumlah evidence per SDG (Approved 100%, Submitted 50%, Rejected 20% warna SDG).
+    </div>
+    <div style="margin-top:12px;">
+      <canvas id="sp-sdg-evidence-chart" style="max-height:460px;"></canvas>
+    </div>
   </div>
 
   <!-- SDG Evidence Status Chart -->
@@ -256,6 +246,8 @@ $metric_summary = $metric_summary ?? array();
     const approvedTotal = unitRows.map(u => Number(u.approved_total || 0));
     const noDataTotal = unitRows.map(u => Number(u.no_data_total || 0));
     const mandatoryTotal = unitRows.map(u => Number(u.mandatory_total || 0));
+    const approvedPercent = unitRows.map((u, i) => mandatoryTotal[i] > 0 ? (approvedTotal[i] / mandatoryTotal[i]) * 100 : 0);
+    const noDataPercent = unitRows.map((u, i) => mandatoryTotal[i] > 0 ? (noDataTotal[i] / mandatoryTotal[i]) * 100 : 0);
 
     new Chart(unitCanvas, {
       type: 'bar',
@@ -264,14 +256,14 @@ $metric_summary = $metric_summary ?? array();
         datasets: [
           {
             label: 'Approved',
-            data: approvedTotal,
+            data: approvedPercent,
             backgroundColor: '#2563eb',
             borderColor: '#1d4ed8',
             borderWidth: 1
           },
           {
             label: 'NO Data',
-            data: noDataTotal,
+            data: noDataPercent,
             backgroundColor: '#fb923c',
             borderColor: '#ea580c',
             borderWidth: 1
@@ -291,8 +283,10 @@ $metric_summary = $metric_summary ?? array();
                 const approved = approvedTotal[idx];
                 const noData = noDataTotal[idx];
                 const mandatory = mandatoryTotal[idx];
-                const progress = mandatory > 0 ? Math.round(((approved + noData) / mandatory) * 100) : 0;
-                return `${ctx.dataset.label}: ${ctx.raw} (Progress ${progress}% | ${approved + noData}/${mandatory})`;
+                if (ctx.dataset.label === 'Approved') {
+                  return `Approved: ${approved} (${approved}/${mandatory})`;
+                }
+                return `No data: ${noData} (${noData}/${mandatory})`;
               }
             }
           }
@@ -305,7 +299,8 @@ $metric_summary = $metric_summary ?? array();
           y: {
             beginAtZero: true,
             stacked: true,
-            title: { display: true, text: 'Jumlah Metrik Mandatory' }
+            max: 100,
+            title: { display: true, text: 'Persentase Data Terkumpul (%)' }
           }
         }
       }

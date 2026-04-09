@@ -5,6 +5,22 @@ if (!defined('ABSPATH')) exit;
 
 final class ExportService {
 
+  public static function outputCsv($filename, $headers, $rows) {
+    if (ob_get_length()) ob_end_clean();
+    nocache_headers();
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . sanitize_file_name($filename) . '"');
+
+    $out = fopen('php://output', 'w');
+    if (!$out) wp_die('Gagal membuat file CSV.');
+    fputcsv($out, array_values((array)$headers));
+    foreach ((array)$rows as $row) {
+      fputcsv($out, array_values((array)$row));
+    }
+    fclose($out);
+    exit;
+  }
+
   public static function outputXlsx($filename, $headers, $rows) {
     if (ob_get_length()) {
       ob_end_clean();

@@ -10,7 +10,6 @@ final class Url {
     $map = array(
       'my'     => 'evidence-saya',
       'new'    => 'buat-evidence-baru',
-      'new2'   => 'form-evidence-2',
       'detail' => 'detail-evidence',
       'review' => 'evidence-direview',
       'dash'   => 'dashboard-reviewer',

@@ -33,7 +33,7 @@ final class MyEvidenceShortcode {
     }
 
     $rows = EvidenceRepository::findBySubmitterFiltered($user_id, $filters);
-    if (!empty($_GET['export']) && $_GET['export'] === 'xlsx') {
+    if (!empty($_GET['export']) && $_GET['export'] === 'csv') {
       $export_rows = array();
       foreach ((array)$rows as $r) {
         $export_rows[] = array(
@@ -48,8 +48,8 @@ final class MyEvidenceShortcode {
           'Created At' => $r->created_at,
         );
       }
-      ExportService::outputXlsx(
-        'my-evidence-' . date('Ymd-His') . '.xlsx',
+      ExportService::outputCsv(
+        'my-evidence-' . date('Ymd-His') . '.csv',
         array('ID', 'Year', 'Title', 'Status', 'Unit', 'SDG', 'Metric Code', 'Updated At', 'Created At'),
         $export_rows
       );

@@ -3,14 +3,14 @@ use Spectrum\Evidence\Core\Url;
 
 if (!defined('ABSPATH')) exit;
 
-$active = 'new2';
+$active = 'new';
 include __DIR__ . '/layout-open.php';
 ?>
 
 <div class="sp-page-header">
   <div>
-    <h1>Form Evidence 2</h1>
-    <p>Mode baru (MANDATORY + GENERAL). Tahun pelaporan dikunci ke <?php echo (int)$year; ?>.</p>
+    <h1>Buat Evidence Baru</h1>
+    <p>Mode MANDATORY + GENERAL. Tahun pelaporan dikunci ke <?php echo (int)$year; ?>.</p>
   </div>
   <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('my')); ?>">← Kembali</a>
 </div>
@@ -140,7 +140,7 @@ include __DIR__ . '/layout-open.php';
       const id = Number(item.metric_id || item.id);
       const opt = document.createElement('option');
       opt.value = id;
-      opt.textContent = `SDG ${item.sdg_number} – ${item.metric_code} – ${item.metric_title}${noDataIds.has(id) ? ' [NO]' : ''}`;
+      opt.textContent = item.label || `${item.metric_code} – ${item.metric_title}${noDataIds.has(id) ? ' [NO]' : ''}`;
       metricSelect.appendChild(opt);
     });
   }
