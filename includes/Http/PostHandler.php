@@ -75,7 +75,8 @@ final class PostHandler {
 
       MetricNoDataRepository::mark($unit_code, $year, $metric_id, $user_id);
       Notices::set($user_id, 'success', 'Status NO berhasil disimpan untuk metrik mandatory ini.');
-      self::redirectBack();
+      wp_safe_redirect(Url::page('my'));
+      exit;
     }
 
     $action = sanitize_text_field($_POST['spectrum_action']); // draft|submit|update_submit|update_draft etc
