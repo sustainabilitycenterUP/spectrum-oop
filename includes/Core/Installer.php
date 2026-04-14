@@ -21,6 +21,17 @@ final class Installer {
       $wpdb->query("ALTER TABLE {$tEvidence} ADD KEY idx_evidence_attachment_id (attachment_id)");
     }
 
+    $hasNum = $wpdb->get_results("SHOW COLUMNS FROM {$tEvidence} LIKE 'numeric_value'");
+    if (empty($hasNum)) {
+      $wpdb->query("ALTER TABLE {$tEvidence} ADD COLUMN numeric_value DECIMAL(20,4) NULL AFTER summary");
+    }
+
+    $tMetric = Db::table('spectrum_metric');
+    $hasDesc = $wpdb->get_results("SHOW COLUMNS FROM {$tMetric} LIKE 'metric_desc'");
+    if (empty($hasDesc)) {
+      $wpdb->query("ALTER TABLE {$tMetric} ADD COLUMN metric_desc TEXT NULL AFTER metric_question");
+    }
+
     // Optional: kalau kamu mau installer juga create table log (kalau belum)
     $tLog = Db::table('spectrum_evidence_log');
     $sqlLog = "CREATE TABLE {$tLog} (
@@ -36,5 +47,20 @@ final class Installer {
       KEY actor_id (actor_id)
     ) {$charset};";
     dbDelta($sqlLog);
+
+    $tNo = Db::table('spectrum_metric_no_data');
+    $sqlNo = "CREATE TABLE {$tNo} (
+      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+      unit_code VARCHAR(255) NOT NULL,
+      year INT NOT NULL,
+      metric_id BIGINT UNSIGNED NOT NULL,
+      submitter_id BIGINT UNSIGNED NULL,
+      created_at DATETIME NOT NULL,
+      PRIMARY KEY (id),
+      UNIQUE KEY uniq_unit_year_metric (unit_code, year, metric_id),
+      KEY idx_metric (metric_id),
+      KEY idx_unit_year (unit_code, year)
+    ) {$charset};";
+    dbDelta($sqlNo);
   }
 }
