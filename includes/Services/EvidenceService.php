@@ -21,6 +21,9 @@ final class EvidenceService {
     $summary = isset($_POST['summary']) ? sanitize_textarea_field($_POST['summary']) : '';
     $link    = isset($_POST['link_url']) ? esc_url_raw($_POST['link_url']) : '';
     $metric_id = isset($_POST['metric_id']) ? (int)$_POST['metric_id'] : 0;
+    $metric_number_value = (isset($_POST['metric_number_value']) && $_POST['metric_number_value'] !== '')
+      ? (float)$_POST['metric_number_value']
+      : null;
 
     $target_status = (strpos($action, 'submit') !== false) ? 'SUBMITTED' : 'DRAFT';
     $unit_code = Auth::unitCode($user_id);
@@ -52,19 +55,27 @@ final class EvidenceService {
     $now = current_time('mysql');
 
     if (!$is_update) {
-      $insert_id = EvidenceRepository::insert(array(
+      $insert_data = array(
         'submitter_id'  => $user_id,
         'year'          => $year,
         'unit_code'     => $unit_code,
         'title'         => $title,
         'summary'       => $summary,
         'link_url'      => $link,
-        'attachment_id' => $new_attachment_id ? (int)$new_attachment_id : null,
         'status'        => $target_status,
         'submitted_at'  => ($target_status === 'SUBMITTED') ? $now : null,
         'created_at'    => $now,
         'updated_at'    => $now,
-      ));
+      );
+
+      if (EvidenceRepository::hasColumn('numeric_value')) {
+        $insert_data['numeric_value'] = $metric_number_value;
+      }
+      if (EvidenceRepository::hasColumn('attachment_id')) {
+        $insert_data['attachment_id'] = $new_attachment_id ? (int)$new_attachment_id : null;
+      }
+
+      $insert_id = EvidenceRepository::insert($insert_data);
 
       if (!$insert_id) return new \WP_Error('db_insert_failed', 'Gagal menyimpan evidence ke database.');
 
@@ -75,16 +86,24 @@ final class EvidenceService {
     }
 
     // update
-    $ok = EvidenceRepository::update($evidence_id, array(
+    $update_data = array(
       'year'          => $year,
       'title'         => $title,
       'summary'       => $summary,
       'link_url'      => $link,
-      'attachment_id' => $new_attachment_id ? (int)$new_attachment_id : null,
       'status'        => $target_status,
       'submitted_at'  => ($target_status === 'SUBMITTED') ? $now : null,
       'updated_at'    => $now,
-    ));
+    );
+
+    if (EvidenceRepository::hasColumn('numeric_value')) {
+      $update_data['numeric_value'] = $metric_number_value;
+    }
+    if (EvidenceRepository::hasColumn('attachment_id')) {
+      $update_data['attachment_id'] = $new_attachment_id ? (int)$new_attachment_id : null;
+    }
+
+    $ok = EvidenceRepository::update($evidence_id, $update_data);
 
     if ($ok === false) return new \WP_Error('db_update_failed', 'Gagal update evidence.');
 
