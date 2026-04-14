@@ -60,13 +60,6 @@ $active = isset($active) ? $active : '';
           </li>
 
           <li class="sp-sidebar-item">
-            <a class="sp-sidebar-link <?php echo ($active==='new2'?'active':''); ?>"
-              href="<?php echo esc_url(Url::page('new2')); ?>">
-              <span class="sp-dot"></span>Form Evidence 2
-            </a>
-          </li>
-
-          <li class="sp-sidebar-item">
             <a class="sp-sidebar-link <?php echo ($active==='metrics'?'active':''); ?>"
               href="<?php echo esc_url(Url::page('metrics')); ?>">
               <span class="sp-dot"></span>SDG &amp; Indikator THE
