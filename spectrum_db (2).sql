@@ -515,6 +515,15 @@ ALTER TABLE `wp_spectrum_review`
 --
 ALTER TABLE `wp_spectrum_year_metric`
   ADD CONSTRAINT `fk_year_metric_metric` FOREIGN KEY (`metric_id`) REFERENCES `wp_spectrum_metric` (`id`) ON DELETE CASCADE;
+
+-- --------------------------------------------------------
+-- Add-on schema updates (Form Evidence V2)
+-- --------------------------------------------------------
+ALTER TABLE `wp_spectrum_metric`
+  ADD COLUMN `metric_desc` TEXT NULL AFTER `metric_question`;
+
+ALTER TABLE `wp_spectrum_evidence`
+  ADD COLUMN `numeric_value` DECIMAL(20,4) NULL AFTER `summary`;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -21,6 +21,9 @@ final class EvidenceService {
     $summary = isset($_POST['summary']) ? sanitize_textarea_field($_POST['summary']) : '';
     $link    = isset($_POST['link_url']) ? esc_url_raw($_POST['link_url']) : '';
     $metric_id = isset($_POST['metric_id']) ? (int)$_POST['metric_id'] : 0;
+    $metric_number_value = (isset($_POST['metric_number_value']) && $_POST['metric_number_value'] !== '')
+      ? (float)$_POST['metric_number_value']
+      : null;
 
     $target_status = (strpos($action, 'submit') !== false) ? 'SUBMITTED' : 'DRAFT';
     $unit_code = Auth::unitCode($user_id);
@@ -59,6 +62,7 @@ final class EvidenceService {
         'title'         => $title,
         'summary'       => $summary,
         'link_url'      => $link,
+        'numeric_value' => $metric_number_value,
         'attachment_id' => $new_attachment_id ? (int)$new_attachment_id : null,
         'status'        => $target_status,
         'submitted_at'  => ($target_status === 'SUBMITTED') ? $now : null,
@@ -80,6 +84,7 @@ final class EvidenceService {
       'title'         => $title,
       'summary'       => $summary,
       'link_url'      => $link,
+      'numeric_value' => $metric_number_value,
       'attachment_id' => $new_attachment_id ? (int)$new_attachment_id : null,
       'status'        => $target_status,
       'submitted_at'  => ($target_status === 'SUBMITTED') ? $now : null,

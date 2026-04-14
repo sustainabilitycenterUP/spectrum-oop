@@ -56,12 +56,26 @@ include __DIR__ . '/layout-open.php';
       </select>
     </div>
 
+    <div id="sp-metric-info-v2" class="sp-metric-box" style="display:none;margin-bottom:12px;">
+      <div class="sp-metric-title">Metric Question</div>
+      <div id="sp-metric-question">-</div>
+      <div class="sp-metric-title" style="margin-top:8px;">Deskripsi Data yang Dibutuhkan</div>
+      <div id="sp-metric-desc">-</div>
+      <div class="sp-metric-title" style="margin-top:8px;">Catatan</div>
+      <div id="sp-metric-note">-</div>
+    </div>
+
     <div class="sp-form-row" id="sp-no-data-wrap" style="display:none;">
       <label style="display:flex;align-items:center;gap:8px;">
-        <input type="checkbox" name="is_no_data" id="is_no_data" value="1">
-        No (fungsi/unit tidak memiliki data untuk metrik mandatory ini)
+        <input type="checkbox" name="is_no_data" id="is_no_data" value="1"> Not Available
       </label>
-      <div class="sp-help">Jika centang ini dipilih, field detail evidence boleh dikosongkan.</div>
+      <div class="sp-help" style="margin-left:24px;">centang jika fungsi Anda tidak memiliki data yang diminta</div>
+    </div>
+
+    <div class="sp-form-row" id="sp-number-wrap" style="display:none;">
+      <label class="sp-label">Nilai Number *</label>
+      <input type="number" step="any" name="metric_number_value" id="metric_number_value" class="sp-input">
+      <div class="sp-help">Field ini wajib untuk metrik bertipe number/numeric.</div>
     </div>
 
     <div class="sp-form-row">
@@ -111,6 +125,12 @@ include __DIR__ . '/layout-open.php';
   const metricSelect = document.getElementById('metric_select_v2');
   const noWrap = document.getElementById('sp-no-data-wrap');
   const noData = document.getElementById('is_no_data');
+  const numberWrap = document.getElementById('sp-number-wrap');
+  const numberInput = document.getElementById('metric_number_value');
+  const metricInfo = document.getElementById('sp-metric-info-v2');
+  const metricQuestion = document.getElementById('sp-metric-question');
+  const metricDesc = document.getElementById('sp-metric-desc');
+  const metricNote = document.getElementById('sp-metric-note');
   const form = document.getElementById('sp-form-v2');
 
   const title = document.getElementById('title_v2');
@@ -141,8 +161,14 @@ include __DIR__ . '/layout-open.php';
       const opt = document.createElement('option');
       opt.value = id;
       opt.textContent = item.label || `${item.metric_code} – ${item.metric_title}${noDataIds.has(id) ? ' [NO]' : ''}`;
+      opt.dataset.question = item.metric_question || '';
+      opt.dataset.desc = item.metric_desc || '';
+      opt.dataset.note = item.metric_note || '';
+      opt.dataset.type = (item.metric_type || '').toLowerCase();
       metricSelect.appendChild(opt);
     });
+
+    onMetricChange();
   }
 
   function updateSourceMode() {
@@ -158,8 +184,14 @@ include __DIR__ . '/layout-open.php';
 
   function syncRequired() {
     const no = !!noData.checked;
+    const selectedOpt = metricSelect.options[metricSelect.selectedIndex];
+    const type = selectedOpt ? (selectedOpt.dataset.type || '') : '';
+    const isNumber = (type === 'numeric' || type === 'number');
     title.required = !no;
     summary.required = !no;
+    numberWrap.style.display = isNumber ? '' : 'none';
+    numberInput.required = !no && isNumber;
+    if (!isNumber) numberInput.value = '';
     const src = document.querySelector('input[name="source_type"]:checked');
     if (!src || src.value === 'link') {
       link.required = !no;
@@ -170,12 +202,27 @@ include __DIR__ . '/layout-open.php';
     }
   }
 
+  function onMetricChange() {
+    const selectedOpt = metricSelect.options[metricSelect.selectedIndex];
+    if (!selectedOpt || !selectedOpt.value) {
+      metricInfo.style.display = 'none';
+      syncRequired();
+      return;
+    }
+    metricQuestion.textContent = selectedOpt.dataset.question || '-';
+    metricDesc.textContent = selectedOpt.dataset.desc || '-';
+    metricNote.textContent = selectedOpt.dataset.note || '-';
+    metricInfo.style.display = '';
+    syncRequired();
+  }
+
   modeEls.forEach(el => el.addEventListener('change', function(){
     sdgRow.style.display = (getMode() === 'GENERAL') ? '' : 'none';
     rebuildMetric();
   }));
 
   sdgSelect.addEventListener('change', rebuildMetric);
+  metricSelect.addEventListener('change', onMetricChange);
   noData.addEventListener('change', syncRequired);
   sourceRadios.forEach(r => r.addEventListener('change', function(){ updateSourceMode(); syncRequired(); }));
 

@@ -95,28 +95,6 @@ $metric_summary = $metric_summary ?? array();
     </div>
   </div>
 
-  <!-- SDG Evidence Status Chart -->
-  <div class="sp-box" style="margin-top:14px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
-      <h3 style="margin:0;">SDG Evidence Status</h3>
-      <label style="font-size:12px;color:#334155;display:flex;align-items:center;gap:6px;">
-        Filter Status
-        <select id="sp-sdg-status-filter" class="sp-select" style="width:auto;min-width:140px;padding:4px 8px;">
-          <option value="ALL">Semua</option>
-          <option value="APPROVED">Approved</option>
-          <option value="SUBMITTED">Submitted</option>
-          <option value="REJECTED">Rejected</option>
-        </select>
-      </label>
-    </div>
-    <div style="font-size:12px;color:#6b7280;margin-top:6px;">
-      Grouped bar chart jumlah evidence per SDG (Approved 100%, Submitted 50%, Rejected 20% warna SDG).
-    </div>
-    <div style="margin-top:12px;">
-      <canvas id="sp-sdg-evidence-chart" style="max-height:460px;"></canvas>
-    </div>
-  </div>
-
   <!-- Ringkasan per Metrik -->
   <div class="sp-box" style="margin-top:14px;">
     <h3 style="margin:0;">Ringkasan per Metrik</h3>

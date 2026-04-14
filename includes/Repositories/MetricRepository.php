@@ -26,6 +26,7 @@ final class MetricRepository {
         m.metric_code,
         m.metric_title,
         m.metric_question,
+        m.metric_desc,
         m.metric_note,
         m.sdg_number,
         y.year
@@ -87,6 +88,7 @@ final class MetricRepository {
         m.metric_type,
         m.metric_title,
         m.metric_question,
+        m.metric_desc,
         m.metric_note,
         y.year
       FROM {$m} m
@@ -113,6 +115,7 @@ final class MetricRepository {
         m.metric_code,
         m.metric_title,
         m.metric_question,
+        m.metric_desc,
         m.metric_note,
         m.sdg_number,
         y.year
