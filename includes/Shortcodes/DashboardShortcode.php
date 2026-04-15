@@ -20,15 +20,10 @@ final class DashboardShortcode {
     $data = array(
       'active' => 'dashboard',
       'year'   => $year,
-      'years'  => DashboardRepository::distinctYears(),
-      'status' => DashboardRepository::statusCounts($year),
-      'weekly' => DashboardRepository::weeklyCounts($year),
+      'overview' => DashboardRepository::mandatoryOverview($year),
       'sdg_summary' => DashboardRepository::sdgSummary($year),
-      'metric_summary' => DashboardRepository::metricSummaryTop($year, 10),
       'unit'   => DashboardRepository::unitCounts($year),
-      // 'sdg'    => DashboardRepository::sdgCounts($year),
-      'top_units'   => DashboardRepository::topApprovedUnits($year),
-      // 'latest' => DashboardRepository::latestEvidence(8, $year),
+      'general_unit' => DashboardRepository::generalApprovedByUnit($year),
     );
 
     return View::render('dashboard', $data);
