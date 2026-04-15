@@ -1,170 +1,253 @@
 <?php
-use Spectrum\Evidence\Core\Url;
-
 if (!defined('ABSPATH')) exit;
 
 include __DIR__ . '/layout-open.php';
 
 $year = (int)($year ?? 0);
-$status = $status ?? array();
-$weekly = $weekly ?? array('total' => 0, 'submitted' => 0, 'approved' => 0);
+$overview = $overview ?? array(
+  'requested_total' => 0,
+  'confirmed_total' => 0,
+  'submitted_total' => 0,
+  'percent' => 0,
+);
 $sdg_summary = $sdg_summary ?? array();
-$metric_summary = $metric_summary ?? array();
+$unit = $unit ?? array();
+$general_unit = $general_unit ?? array();
 ?>
 
 <div class="sp-page-header">
   <div class="sp-page-title-block">
     <h1>Dashboard SPECTRUM</h1>
-    <p>Ringkasan progres pengumpulan evidence (semua status).</p>
+    <p>Ringkasan progres pengumpulan evidence tahun <?php echo (int)$year; ?>.</p>
   </div>
 </div>
 
 <section class="sp-card">
-
-  <form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:14px;">
-    <div>
-      <label class="sp-label">Tahun</label>
-      <select name="year" class="sp-select" style="min-width:160px;">
-        <option value="">Semua Tahun</option>
-        <?php foreach ((array)$years as $y): ?>
-          <option value="<?php echo (int)$y; ?>" <?php selected($year, (int)$y); ?>>
-            <?php echo esc_html($y); ?>
-          </option>
-        <?php endforeach; ?>
-      </select>
+  <div class="sp-dashboard-cards">
+    <div class="sp-box sp-dashboard-stat">
+      <div class="sp-dashboard-stat-label">Jumlah data yang diminta</div>
+      <div class="sp-dashboard-stat-value"><?php echo (int)$overview['requested_total']; ?></div>
     </div>
-    <div>
-      <button class="sp-btn-primary" type="submit">Terapkan</button>
-      <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('dashboard')); ?>">Reset</a>
+    <div class="sp-box sp-dashboard-stat">
+      <div class="sp-dashboard-stat-label">Jumlah data dikonfirmasi</div>
+      <div class="sp-dashboard-stat-value"><?php echo (int)$overview['confirmed_total']; ?></div>
+      <div class="sp-help">Termasuk APPROVED + NO Data (per metrik mandatory unik per fungsi).</div>
     </div>
-  </form>
-
-  <!-- Cards status -->
-  <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;">
-    <?php
-      $totalEvidence =
-        (int)($status['DRAFT'] ?? 0) +
-        (int)($status['SUBMITTED'] ?? 0) +
-        (int)($status['APPROVED'] ?? 0) +
-        (int)($status['REJECTED'] ?? 0);
-
-      $cards = array(
-        'Total Evidence' => $totalEvidence,
-        'Submitted'      => (int)($status['SUBMITTED'] ?? 0),
-        'Approved'       => (int)($status['APPROVED'] ?? 0),
-      );
-    ?>
-    <?php foreach ($cards as $k => $v): ?>
-      <div class="sp-box">
-        <div style="color:#6b7280;font-size:12px;"><?php echo esc_html($k); ?></div>
-        <div style="font-size:26px;font-weight:650;margin-top:6px;"><?php echo esc_html($v); ?></div>
-        <div style="margin-top:6px;">
-          <span style="background:#dcfce7;color:#166534;padding:3px 8px;border-radius:999px;font-size:11px;">
-            +<?php
-              echo ($k === 'Total Evidence')
-                ? (int)$weekly['total']
-                : (($k === 'Submitted') ? (int)$weekly['submitted'] : (int)$weekly['approved']);
-            ?> dalam 7 hari
-          </span>
-        </div>
-      </div>
-    <?php endforeach; ?>
+    <div class="sp-box sp-dashboard-stat">
+      <div class="sp-dashboard-stat-label">Proses Pengumpulan data</div>
+      <div class="sp-dashboard-stat-value"><?php echo (int)$overview['percent']; ?>%</div>
+      <div class="sp-help">Jumlah data dikonfirmasi / Jumlah data yang diminta.</div>
+    </div>
+    <div class="sp-box sp-dashboard-stat">
+      <div class="sp-dashboard-stat-label">Jumlah data belum dikonfirmasi</div>
+      <div class="sp-dashboard-stat-value"><?php echo (int)$overview['submitted_total']; ?></div>
+      <div class="sp-help">Mandatory yang statusnya masih SUBMITTED.</div>
+    </div>
   </div>
 
-  <div style="display:grid;grid-template-columns: 1fr; gap:14px; margin-top:16px;">
-    <!-- UNIT -->
+  <div class="sp-dashboard-two-col" style="margin-top:14px;">
     <div class="sp-box">
-      <h3 style="margin-top:0;">
-        Progress per Unit
-        <span title="Dihitung berdasarkan cakupan metrik MANDATORY (status SUBMITTED/APPROVED)" style="cursor:help;color:#6b7280;">ⓘ</span>
-      </h3>
-
+      <h3 style="margin:0 0 6px 0;">Progress per Unit</h3>
+      <div class="sp-help">Sumbu Y: Fungsi, sumbu X: persentase konfirmasi mandatory.</div>
       <?php if (empty($unit)): ?>
-        <div style="color:#6b7280;">Belum ada data unit.</div>
+        <div style="color:#6b7280;margin-top:10px;">Belum ada data unit.</div>
       <?php else: ?>
-        <?php foreach ($unit as $u): ?>
-          <div style="margin-bottom:12px;">
-            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
-              <div><?php echo esc_html($u->unit_code ?: '—'); ?></div>
-              <div><?php echo (int)$u->submitted_total; ?> / <?php echo (int)$u->mandatory_total; ?> (<?php echo (int)$u->percent; ?>%)</div>
-            </div>
+        <div class="sp-chart-wrap" style="margin-top:10px;">
+          <canvas id="sp-unit-progress-chart"></canvas>
+        </div>
+      <?php endif; ?>
+    </div>
 
-            <div style="background:#eee;height:8px;border-radius:4px;">
-              <div style="width:<?php echo min((int)$u->percent,100); ?>%;background:#1d4ed8;height:8px;border-radius:4px;"></div>
-            </div>
-          </div>
-        <?php endforeach; ?>
+    <div class="sp-box">
+      <h3 style="margin:0 0 6px 0;">Grafik Kontribusi Unit (General Approved)</h3>
+      <div class="sp-help">Sumbu Y: Fungsi, sumbu X: jumlah evidence GENERAL yang APPROVED.</div>
+      <?php if (empty($general_unit)): ?>
+        <div style="color:#6b7280;margin-top:10px;">Belum ada data evidence general approved.</div>
+      <?php else: ?>
+        <div class="sp-chart-wrap" style="margin-top:10px;">
+          <canvas id="sp-unit-general-chart"></canvas>
+        </div>
       <?php endif; ?>
     </div>
   </div>
 
-  <!-- Evidence per SDG -->
   <div class="sp-box" style="margin-top:14px;">
-    <h3 style="margin:0;">Evidence per SDG</h3>
-
-    <?php if (empty($sdg_summary)): ?>
-      <div style="color:#6b7280;margin-top:8px;">Belum ada data SDG.</div>
-    <?php else: ?>
-      <table class="sp-table" style="margin-top:10px;">
-        <thead>
-          <tr>
-            <th style="width:70px;">SDG</th>
-            <th>Topic</th>
-            <th>Total</th>
-            <th>Submitted</th>
-            <th>Approved</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($sdg_summary as $row): ?>
-            <tr>
-              <td><strong><?php echo (int)$row->sdg_number; ?></strong></td>
-              <td><?php echo esc_html($row->sdg_title); ?></td>
-              <td><?php echo (int)$row->total; ?></td>
-              <td><?php echo (int)$row->submitted; ?></td>
-              <td><?php echo (int)$row->approved; ?></td>
-            </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    <?php endif; ?>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+      <h3 style="margin:0;">SDG Evidence Status</h3>
+      <label style="font-size:12px;color:#334155;display:flex;align-items:center;gap:6px;">
+        Filter Status
+        <select id="sp-sdg-status-filter" class="sp-select" style="width:auto;min-width:140px;padding:4px 8px;">
+          <option value="ALL">Semua</option>
+          <option value="APPROVED">Approved</option>
+          <option value="SUBMITTED">Submitted</option>
+          <option value="REJECTED">Rejected</option>
+        </select>
+      </label>
+    </div>
+    <div class="sp-chart-wrap" style="margin-top:12px;">
+      <canvas id="sp-sdg-evidence-chart"></canvas>
+    </div>
   </div>
-
-  <!-- Ringkasan per Metrik -->
-  <div class="sp-box" style="margin-top:14px;">
-    <h3 style="margin:0;">Ringkasan per Metrik</h3>
-    <div style="font-size:12px;color:#6b7280;">Top 10 metrik dengan evidence terbanyak.</div>
-
-    <?php if (empty($metric_summary)): ?>
-      <div style="color:#6b7280;margin-top:8px;">Belum ada data metrik.</div>
-    <?php else: ?>
-      <table class="sp-table" style="margin-top:10px;">
-        <thead>
-          <tr>
-            <th style="width:70px;">SDG</th>
-            <th style="width:140px;">Kode Metrik</th>
-            <th>Nama Metrik</th>
-            <th>Total Evidence</th>
-            <th>Submitted</th>
-            <th>Approved</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($metric_summary as $row): ?>
-            <tr>
-              <td><strong><?php echo (int)$row->sdg_number; ?></strong></td>
-              <td><?php echo esc_html($row->metric_code); ?></td>
-              <td><?php echo esc_html($row->metric_title); ?></td>
-              <td><?php echo (int)$row->total; ?></td>
-              <td><?php echo (int)$row->submitted; ?></td>
-              <td><?php echo (int)$row->approved; ?></td>
-            </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    <?php endif; ?>
-  </div>
-
 </section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(function(){
+  if (typeof Chart === 'undefined') return;
+
+  const rows = <?php echo wp_json_encode(array_values((array)$sdg_summary)); ?>;
+  const unitRows = <?php echo wp_json_encode(array_values((array)$unit)); ?>;
+  const generalRows = <?php echo wp_json_encode(array_values((array)$general_unit)); ?>;
+
+  const commonTooltip = {
+    backgroundColor: '#dcfce7',
+    titleColor: '#166534',
+    bodyColor: '#14532d',
+    borderColor: '#86efac',
+    borderWidth: 1,
+    titleFont: { size: 11, weight: '600' },
+    bodyFont: { size: 11 }
+  };
+
+  const sdgLabels = rows.map(r => 'SDG ' + (r.sdg_number || 0));
+  const approved = rows.map(r => Number(r.approved || 0));
+  const submitted = rows.map(r => Number(r.submitted || 0));
+  const rejected = rows.map(r => Number(r.rejected || 0));
+
+  const sdgColorMap = {
+    1:'#e5243b', 2:'#dda63a', 3:'#4c9f38', 4:'#c5192d', 5:'#ff3a21', 6:'#26bde2',
+    7:'#fcc30b', 8:'#a21942', 9:'#fd6925', 10:'#dd1367', 11:'#fd9d24', 12:'#bf8b2e',
+    13:'#3f7e44', 14:'#0a97d9', 15:'#56c02b', 16:'#00689d', 17:'#19486a'
+  };
+
+  const baseColors = rows.map(r => sdgColorMap[Number(r.sdg_number)] || '#64748b');
+  const hexToRgba = (hex, alpha) => {
+    const c = hex.replace('#','');
+    const r = parseInt(c.substring(0,2), 16);
+    const g = parseInt(c.substring(2,4), 16);
+    const b = parseInt(c.substring(4,6), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  };
+
+  const sdgEl = document.getElementById('sp-sdg-evidence-chart');
+  if (sdgEl) {
+    const sdgChart = new Chart(sdgEl, {
+      type: 'bar',
+      data: {
+        labels: sdgLabels,
+        datasets: [
+          { key:'APPROVED', label:'Approved', data: approved, backgroundColor: baseColors.map(c => hexToRgba(c, 1)) },
+          { key:'SUBMITTED', label:'Submitted', data: submitted, backgroundColor: baseColors.map(c => hexToRgba(c, 0.5)) },
+          { key:'REJECTED', label:'Rejected', data: rejected, backgroundColor: baseColors.map(c => hexToRgba(c, 0.2)) }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: {
+            ...commonTooltip,
+            callbacks: { label: function(ctx){ return `${ctx.dataset.label}: ${ctx.raw}`; } }
+          }
+        },
+        scales: {
+          x: { ticks: { maxRotation: 45, minRotation: 45 } },
+          y: { beginAtZero: true, title: { display: true, text: 'Jumlah Evidence' } }
+        }
+      }
+    });
+
+    const statusFilter = document.getElementById('sp-sdg-status-filter');
+    if (statusFilter) {
+      statusFilter.addEventListener('change', function(){
+        const selected = this.value;
+        sdgChart.data.datasets.forEach(function(ds){
+          ds.hidden = (selected !== 'ALL' && ds.key !== selected);
+        });
+        sdgChart.update();
+      });
+    }
+  }
+
+  const unitCanvas = document.getElementById('sp-unit-progress-chart');
+  if (unitCanvas && unitRows.length) {
+    const unitLabels = unitRows.map(u => u.unit_code || '—');
+    const unitPercent = unitRows.map(u => Number(u.percent || 0));
+
+    new Chart(unitCanvas, {
+      type: 'bar',
+      data: {
+        labels: unitLabels,
+        datasets: [{
+          label: 'Persentase konfirmasi',
+          data: unitPercent,
+          backgroundColor: '#2563eb',
+          borderColor: '#1d4ed8',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            ...commonTooltip,
+            callbacks: {
+              label: function(ctx){
+                const idx = ctx.dataIndex;
+                const item = unitRows[idx] || {};
+                return `${ctx.raw}% (${item.confirmed_total || 0}/${item.requested_total || 0})`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { beginAtZero: true, max: 100, title: { display: true, text: 'Persentase (%)' } },
+          y: { ticks: { autoSkip: false } }
+        }
+      }
+    });
+  }
+
+  const generalCanvas = document.getElementById('sp-unit-general-chart');
+  if (generalCanvas && generalRows.length) {
+    const labels = generalRows.map(u => u.unit_code || '—');
+    const totals = generalRows.map(u => Number(u.general_approved_total || 0));
+
+    new Chart(generalCanvas, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'General Approved',
+          data: totals,
+          backgroundColor: '#16a34a',
+          borderColor: '#15803d',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            ...commonTooltip,
+            callbacks: { label: function(ctx){ return `Jumlah evidence: ${ctx.raw}`; } }
+          }
+        },
+        scales: {
+          x: { beginAtZero: true, title: { display: true, text: 'Jumlah Evidence' } },
+          y: { ticks: { autoSkip: false } }
+        }
+      }
+    });
+  }
+})();
+</script>
 
 <?php include __DIR__ . '/layout-close.php'; ?>

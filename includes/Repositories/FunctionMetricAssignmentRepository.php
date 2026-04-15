@@ -24,8 +24,10 @@ final class FunctionMetricAssignmentRepository {
         fma.category,
         m.sdg_number,
         m.metric_code,
+        m.metric_type,
         m.metric_title,
         m.metric_question,
+        m.metric_desc,
         m.metric_note,
         ym.year
       FROM {$t} fma
@@ -93,8 +95,10 @@ final class FunctionMetricAssignmentRepository {
         fma.category,
         m.sdg_number,
         m.metric_code,
+        m.metric_type,
         m.metric_title,
         m.metric_question,
+        m.metric_desc,
         m.metric_note,
         ym.year
       FROM {$t} fma

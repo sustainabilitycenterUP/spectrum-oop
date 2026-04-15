@@ -42,6 +42,13 @@ include __DIR__ . '/layout-open.php';
     <div>
       <button class="sp-btn-primary" type="submit">Terapkan Filter</button>
       <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('approved')); ?>">Reset</a>
+      <?php
+        $export_params = array();
+        if (!empty($filters['unit_code'])) $export_params['unit_code'] = $filters['unit_code'];
+        if (!empty($filters['sdg_number'])) $export_params['sdg_number'] = (int)$filters['sdg_number'];
+        $export_params['export'] = 'csv';
+      ?>
+      <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('approved', $export_params)); ?>">Export CSV</a>
     </div>
   </form>
 
@@ -52,26 +59,33 @@ include __DIR__ . '/layout-open.php';
       <table class="sp-table" style="min-width:980px;">
         <thead>
           <tr>
-            <th>Judul</th>
-            <th>Tahun</th>
-            <th>Unit</th>
             <th>SDG</th>
-            <th>Metric</th>
-            <th>Update</th>
+            <th>Metrik</th>
+            <th>Judul Evidence</th>
+            <th>Link Dokumen / Evidence</th>
+            <th>Catatan Evidence</th>
             <th>Aksi</th>
           </tr>
         </thead>
         <tbody>
           <?php foreach ($rows as $r): ?>
             <tr>
-              <td><?php echo esc_html($r->title); ?></td>
-              <td><?php echo esc_html($r->year); ?></td>
-              <td><?php echo esc_html($r->unit_code); ?></td>
               <td><?php echo $r->sdg_number ? esc_html('SDG '.$r->sdg_number) : '—'; ?></td>
+              <td><?php echo $r->metric_code ? esc_html($r->metric_code) : '—'; ?></td>
+              <td><?php echo esc_html($r->title); ?></td>
               <td>
-                <?php echo $r->metric_code ? esc_html($r->metric_code.' – '.$r->metric_title) : '—'; ?>
+                <?php if (!empty($r->link_url)): ?>
+                  <a target="_blank" href="<?php echo esc_url($r->link_url); ?>">Buka Link</a>
+                <?php else: ?>
+                  —
+                <?php endif; ?>
               </td>
-              <td><?php echo esc_html($r->updated_at); ?></td>
+              <td>
+                <?php
+                  $txt = trim((string)($r->summary ?? ''));
+                  echo $txt !== '' ? esc_html(mb_strimwidth($txt, 0, 90, '...')) : '—';
+                ?>
+              </td>
               <td>
                 <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('detail', array('evidence_id'=>$r->id))); ?>">
                   Detail
