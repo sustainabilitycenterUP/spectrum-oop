@@ -82,6 +82,17 @@ final class EvidenceRepository {
     ));
   }
 
+
+  public static function hasColumn($column) {
+    global $wpdb;
+    $t = self::table();
+    $col = sanitize_key($column);
+    if ($col === '') return false;
+    $sql = $wpdb->prepare("SHOW COLUMNS FROM {$t} LIKE %s", $col);
+    $res = $wpdb->get_var($sql);
+    return !empty($res);
+  }
+
   public static function insert($data) {
     global $wpdb;
     $t = self::table();
