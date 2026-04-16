@@ -142,7 +142,7 @@ include __DIR__ . '/layout-open.php';
     </form>
 
     <div style="width:100%;overflow-x:auto;">
-      <table class="sp-table">
+      <table class="sp-table sp-datatable">
         <thead>
           <tr>
             <th>Judul</th><th>Tahun</th><th>SDG</th><th>Unit</th><th>Status</th><th>Update</th><th>Aksi</th>

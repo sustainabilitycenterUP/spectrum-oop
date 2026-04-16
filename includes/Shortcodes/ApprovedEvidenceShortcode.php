@@ -30,23 +30,23 @@ final class ApprovedEvidenceShortcode {
     if (!empty($_GET['export']) && $_GET['export'] === 'csv') {
       $export_rows = array();
       foreach ((array)$rows as $r) {
+        $attachment_url = !empty($r->attachment_id) ? wp_get_attachment_url((int)$r->attachment_id) : '';
+        $evidence_link = !empty($r->link_url) ? $r->link_url : $attachment_url;
+
         $export_rows[] = array(
-          'ID' => (int)$r->id,
-          'Year' => (int)$r->year,
-          'Title' => $r->title,
-          'Unit' => $r->unit_code,
-          'Status' => $r->status,
-          'SDG' => !empty($r->sdg_number) ? ('SDG ' . (int)$r->sdg_number) : '',
-          'Metric Code' => $r->metric_code ?? '',
-          'Metric Title' => $r->metric_title ?? '',
-          'Document Link' => $r->link_url ?? '',
-          'Evidence Note' => $r->summary ?? '',
-          'Updated At' => $r->updated_at,
+          'sdg_number' => (int)($r->sdg_number ?? 0),
+          'metric_code' => $r->metric_code ?? '',
+          'metric_title' => $r->metric_title ?? '',
+          'metric_question' => $r->metric_question ?? '',
+          'judul_evidence' => $r->title ?? '',
+          'number_evidence' => isset($r->numeric_value) ? $r->numeric_value : '',
+          'attachment_or_link' => $evidence_link ?: '',
+          'ringkasan_evidence' => $r->summary ?? '',
         );
       }
       ExportService::outputCsv(
         'approved-evidence-' . date('Ymd-His') . '.csv',
-        array('ID', 'Year', 'Title', 'Unit', 'Status', 'SDG', 'Metric Code', 'Metric Title', 'Document Link', 'Evidence Note', 'Updated At'),
+        array('sdg_number', 'metric_code', 'metric_title', 'metric_question', 'judul_evidence', 'number_evidence', 'attachment_or_link', 'ringkasan_evidence'),
         $export_rows
       );
     }

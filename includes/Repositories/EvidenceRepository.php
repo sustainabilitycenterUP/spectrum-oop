@@ -36,6 +36,14 @@ final class EvidenceRepository {
     $em = Db::table('spectrum_evidence_metric');
     $m  = Db::table('spectrum_metric');
 
+    $select_extra = '';
+    if (self::hasColumn('numeric_value')) {
+      $select_extra .= ', e.numeric_value';
+    }
+    if (self::hasColumn('attachment_id')) {
+      $select_extra .= ', e.attachment_id';
+    }
+
     $where = "WHERE e.submitter_id = %d";
     $params = array((int)$submitter_id);
 
@@ -60,8 +68,9 @@ final class EvidenceRepository {
     }
 
     $sql = "
-      SELECT e.id, e.year, e.title, e.status, e.unit_code, e.updated_at, e.created_at,
-             m.sdg_number, m.metric_code
+      SELECT e.id, e.year, e.title, e.summary, e.status, e.unit_code, e.link_url, e.updated_at, e.created_at
+             {$select_extra},
+             m.sdg_number, m.metric_code, m.metric_title, m.metric_question
       FROM {$e} e
       LEFT JOIN {$em} em ON em.evidence_id = e.id
       LEFT JOIN {$m}  m  ON m.id = em.metric_id
@@ -132,7 +141,6 @@ final class EvidenceRepository {
       ));
     }
 
-    // default queue: hanya SUBMITTED
     return $wpdb->get_results(
       "SELECT e.id, e.unit_code, e.status, e.updated_at, e.created_at,
               m.sdg_number, m.metric_code, m.metric_title

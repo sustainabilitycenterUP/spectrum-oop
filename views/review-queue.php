@@ -27,7 +27,7 @@ include __DIR__ . '/layout-open.php';
     <div style="padding:14px;color:#6b7280;">Belum ada evidence untuk direview.</div>
   <?php else: ?>
     <div style="width:100%;overflow-x:auto;">
-      <table class="sp-table">
+      <table class="sp-table sp-datatable">
         <thead>
           <tr><th>SDG</th><th>Nomor Metrik</th><th>Judul Metrik</th><th>Unit</th><th>Aksi</th></tr>
         </thead>

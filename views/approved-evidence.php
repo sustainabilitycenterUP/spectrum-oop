@@ -56,7 +56,7 @@ include __DIR__ . '/layout-open.php';
     <div style="padding:14px;color:#6b7280;">Belum ada evidence approved (atau hasil filter kosong).</div>
   <?php else: ?>
     <div style="width:100%;overflow-x:auto;">
-      <table class="sp-table" style="min-width:980px;">
+      <table class="sp-table sp-datatable" style="min-width:980px;">
         <thead>
           <tr>
             <th>SDG</th>
@@ -74,8 +74,12 @@ include __DIR__ . '/layout-open.php';
               <td><?php echo $r->metric_code ? esc_html($r->metric_code) : '—'; ?></td>
               <td><?php echo esc_html($r->title); ?></td>
               <td>
-                <?php if (!empty($r->link_url)): ?>
-                  <a target="_blank" href="<?php echo esc_url($r->link_url); ?>">Buka Link</a>
+                <?php
+                  $attachment_url = !empty($r->attachment_id) ? wp_get_attachment_url((int)$r->attachment_id) : '';
+                  $evidence_url = !empty($r->link_url) ? $r->link_url : $attachment_url;
+                ?>
+                <?php if (!empty($evidence_url)): ?>
+                  <a target="_blank" href="<?php echo esc_url($evidence_url); ?>">Buka Link</a>
                 <?php else: ?>
                   —
                 <?php endif; ?>
@@ -87,9 +91,13 @@ include __DIR__ . '/layout-open.php';
                 ?>
               </td>
               <td>
-                <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('detail', array('evidence_id'=>$r->id))); ?>">
-                  Detail
-                </a>
+                <?php if (!empty($r->id)): ?>
+                  <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('detail', array('evidence_id'=>$r->id))); ?>">
+                    Detail
+                  </a>
+                <?php else: ?>
+                  <span class="sp-pill">NO Data</span>
+                <?php endif; ?>
               </td>
             </tr>
           <?php endforeach; ?>

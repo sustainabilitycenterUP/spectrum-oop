@@ -113,9 +113,21 @@ final class DashboardRepository {
               AND e2.unit_code = f.unit_code
               AND e2.year = f.year
               AND e2.status = 'APPROVED'
-          ) OR nd.metric_id IS NOT NULL
+          ) THEN f.metric_id
+        END) AS approved_total,
+        COUNT(DISTINCT CASE
+          WHEN nd.metric_id IS NOT NULL
+           AND NOT EXISTS (
+            SELECT 1
+            FROM {$em} em3
+            INNER JOIN {$e} e3 ON e3.id = em3.evidence_id
+            WHERE em3.metric_id = f.metric_id
+              AND e3.unit_code = f.unit_code
+              AND e3.year = f.year
+              AND e3.status = 'APPROVED'
+           )
           THEN f.metric_id
-        END) AS confirmed_total
+        END) AS no_data_total
       FROM {$fma} f
       LEFT JOIN {$nd} nd ON nd.metric_id = f.metric_id
                         AND nd.unit_code = f.unit_code
@@ -133,8 +145,12 @@ final class DashboardRepository {
 
     foreach ((array)$rows as $r) {
       $requested = (int)($r->requested_total ?? 0);
-      $confirmed = (int)($r->confirmed_total ?? 0);
-      $r->percent = $requested > 0 ? (int)round(($confirmed / $requested) * 100) : 0;
+      $approved = (int)($r->approved_total ?? 0);
+      $noData = (int)($r->no_data_total ?? 0);
+      $r->confirmed_total = min($requested, $approved + $noData);
+      $r->percent = $requested > 0 ? (int)round(($r->confirmed_total / $requested) * 100) : 0;
+      $r->approved_percent = $requested > 0 ? ($approved / $requested) * 100 : 0;
+      $r->no_data_percent = $requested > 0 ? ($noData / $requested) * 100 : 0;
     }
 
     return $rows;

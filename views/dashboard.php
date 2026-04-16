@@ -49,25 +49,23 @@ $general_unit = $general_unit ?? array();
     <div class="sp-box">
       <h3 style="margin:0 0 6px 0;">Progress per Unit</h3>
       <div class="sp-help">Sumbu Y: Fungsi, sumbu X: persentase konfirmasi mandatory.</div>
-      <?php if (empty($unit)): ?>
-        <div style="color:#6b7280;margin-top:10px;">Belum ada data unit.</div>
-      <?php else: ?>
-        <div class="sp-chart-wrap" style="margin-top:10px;">
-          <canvas id="sp-unit-progress-chart"></canvas>
-        </div>
-      <?php endif; ?>
+      <label style="font-size:12px;color:#334155;display:flex;align-items:center;gap:6px;">
+        Filter Fungsi
+        <select id="sp-unit-filter" class="sp-select" style="width:auto;min-width:180px;padding:4px 8px;">
+          <option value="ALL">Semua</option>
+        </select>
+      </label>
+      <div class="sp-chart-wrap" style="margin-top:10px;">
+        <canvas id="sp-unit-progress-chart"></canvas>
+      </div>
     </div>
 
     <div class="sp-box">
       <h3 style="margin:0 0 6px 0;">Grafik Kontribusi Unit (General Approved)</h3>
       <div class="sp-help">Sumbu Y: Fungsi, sumbu X: jumlah evidence GENERAL yang APPROVED.</div>
-      <?php if (empty($general_unit)): ?>
-        <div style="color:#6b7280;margin-top:10px;">Belum ada data evidence general approved.</div>
-      <?php else: ?>
-        <div class="sp-chart-wrap" style="margin-top:10px;">
-          <canvas id="sp-unit-general-chart"></canvas>
-        </div>
-      <?php endif; ?>
+      <div class="sp-chart-wrap" style="margin-top:10px;">
+        <canvas id="sp-unit-general-chart"></canvas>
+      </div>
     </div>
   </div>
 
@@ -171,49 +169,87 @@ $general_unit = $general_unit ?? array();
   }
 
   const unitCanvas = document.getElementById('sp-unit-progress-chart');
-  if (unitCanvas && unitRows.length) {
-    const unitLabels = unitRows.map(u => u.unit_code || '—');
-    const unitPercent = unitRows.map(u => Number(u.percent || 0));
+  const unitFilter = document.getElementById('sp-unit-filter');
+  let unitChart = null;
 
-    new Chart(unitCanvas, {
+  function getFilteredUnits(){
+    if (!unitFilter || unitFilter.value === 'ALL') return unitRows;
+    return unitRows.filter(u => String(u.unit_code || '') === String(unitFilter.value));
+  }
+
+  function renderUnitChart(){
+    if (!unitCanvas) return;
+    const rows = getFilteredUnits();
+    const labels = rows.map(u => u.unit_code || '—');
+    const approvedPct = rows.map(u => Number(u.approved_percent || 0));
+    const noDataPct = rows.map(u => Number(u.no_data_percent || 0));
+
+    if (unitChart) unitChart.destroy();
+
+    unitChart = new Chart(unitCanvas, {
       type: 'bar',
       data: {
-        labels: unitLabels,
-        datasets: [{
-          label: 'Persentase konfirmasi',
-          data: unitPercent,
-          backgroundColor: '#2563eb',
-          borderColor: '#1d4ed8',
-          borderWidth: 1
-        }]
+        labels,
+        datasets: [
+          {
+            label: 'Approved Mandatory',
+            data: approvedPct,
+            backgroundColor: '#2563eb',
+            borderColor: '#1d4ed8',
+            borderWidth: 1
+          },
+          {
+            label: 'No Data',
+            data: noDataPct,
+            backgroundColor: '#f97316',
+            borderColor: '#ea580c',
+            borderWidth: 1
+          }
+        ]
       },
       options: {
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { display: false },
+          legend: { display: true, position: 'top' },
           tooltip: {
             ...commonTooltip,
             callbacks: {
               label: function(ctx){
                 const idx = ctx.dataIndex;
-                const item = unitRows[idx] || {};
-                return `${ctx.raw}% (${item.confirmed_total || 0}/${item.requested_total || 0})`;
+                const item = rows[idx] || {};
+                if (ctx.dataset.label === 'Approved Mandatory') {
+                  return `Approved: ${Number(item.approved_percent || 0).toFixed(1)}% (${item.approved_total || 0}/${item.requested_total || 0})`;
+                }
+                return `No Data: ${Number(item.no_data_percent || 0).toFixed(1)}% (${item.no_data_total || 0}/${item.requested_total || 0})`;
               }
             }
           }
         },
         scales: {
-          x: { beginAtZero: true, max: 100, title: { display: true, text: 'Persentase (%)' } },
-          y: { ticks: { autoSkip: false } }
+          x: { beginAtZero: true, max: 100, title: { display: true, text: 'Persentase (%)' }, stacked: true },
+          y: { ticks: { autoSkip: false }, stacked: true }
         }
       }
     });
   }
 
+  if (unitFilter) {
+    const uniqUnits = Array.from(new Set(unitRows.map(u => String(u.unit_code || '')).filter(Boolean)));
+    uniqUnits.forEach(code => {
+      const opt = document.createElement('option');
+      opt.value = code;
+      opt.textContent = code;
+      unitFilter.appendChild(opt);
+    });
+    unitFilter.addEventListener('change', renderUnitChart);
+  }
+
+  renderUnitChart();
+
   const generalCanvas = document.getElementById('sp-unit-general-chart');
-  if (generalCanvas && generalRows.length) {
+  if (generalCanvas) {
     const labels = generalRows.map(u => u.unit_code || '—');
     const totals = generalRows.map(u => Number(u.general_approved_total || 0));
 
