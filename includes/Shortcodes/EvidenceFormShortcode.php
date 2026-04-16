@@ -7,97 +7,60 @@ use Spectrum\Evidence\Core\Notices;
 use Spectrum\Evidence\Core\View;
 
 use Spectrum\Evidence\Repositories\MetricRepository;
-use Spectrum\Evidence\Repositories\YearMetricRepository;
 use Spectrum\Evidence\Repositories\FunctionMetricAssignmentRepository;
+use Spectrum\Evidence\Repositories\MetricNoDataRepository;
 use Spectrum\Evidence\Repositories\MetricCoverageRepository;
 
 if (!defined('ABSPATH')) exit;
 
 final class EvidenceFormShortcode {
-
   public static function render() {
     if (!Auth::isLoggedIn()) return '<p>Silakan login untuk mengisi evidence.</p>';
-
     Assets::enqueueOnce();
 
     $user_id = Auth::userId();
     $unit_code = Auth::unitCode($user_id);
+    $year = 2027;
 
-    $years = YearMetricRepository::yearsActiveDistinct();
-    $metric_catalog = array();
+    $mandatory_metrics = FunctionMetricAssignmentRepository::getAssignedMetricsByUnitAndYear($unit_code, $year, 'MANDATORY');
+    $mandatory_ids = FunctionMetricAssignmentRepository::getAssignedMetricIdsByUnitAndYear($unit_code, $year);
+    $no_data_ids = MetricNoDataRepository::getMetricIdsByUnitAndYear($unit_code, $year);
+    $approved_ids = MetricCoverageRepository::getApprovedMetricIdsByUnitAndYear($unit_code, $year);
 
-    foreach ((array)$years as $year) {
-      $year = (int)$year;
+    $approved_lookup = array();
+    foreach ((array)$approved_ids as $mid) $approved_lookup[(int)$mid] = true;
 
-      $mandatory_metrics = FunctionMetricAssignmentRepository::getAssignedMetricsByUnitAndYear($unit_code, $year, 'MANDATORY');
-      $recommended_metrics = FunctionMetricAssignmentRepository::getAssignedMetricsByUnitAndYear($unit_code, $year, 'RECOMMENDED');
-      $assigned_ids = FunctionMetricAssignmentRepository::getAssignedMetricIdsByUnitAndYear($unit_code, $year);
-      $approved_ids = MetricCoverageRepository::getApprovedMetricIdsByUnitAndYear($unit_code, $year);
-      $all_active_metrics = MetricRepository::getActiveMetricsByYear($year);
+    $no_lookup = array();
+    foreach ((array)$no_data_ids as $mid) $no_lookup[(int)$mid] = true;
 
-      $assigned_lookup = array();
-      foreach ((array)$assigned_ids as $mid) {
-        $assigned_lookup[(int)$mid] = true;
-      }
+    $formatted_mandatory = array();
+    foreach ((array)$mandatory_metrics as $m) {
+      $id = (int)$m->metric_id;
+      $status = !empty($approved_lookup[$id]) ? 'Complete' : (!empty($no_lookup[$id]) ? 'No data' : 'Uncompleted');
+      $m->label = $m->metric_code . ' – ' . $m->metric_title . ' [' . $status . ']';
+      $formatted_mandatory[] = $m;
+    }
 
-      $approved_lookup = array();
-      foreach ((array)$approved_ids as $mid) {
-        $approved_lookup[(int)$mid] = true;
-      }
+    $active_metrics = MetricRepository::getActiveMetricsByYear($year);
+    $mandatory_lookup = array();
+    foreach ((array)$mandatory_ids as $mid) $mandatory_lookup[(int)$mid] = true;
 
-      $metric_catalog[$year] = array(
-        'MANDATORY' => self::formatMetrics($mandatory_metrics, $approved_lookup),
-        'RECOMMENDED' => self::formatMetrics($recommended_metrics, $approved_lookup),
-        'GENERAL' => self::formatGeneralMetrics($all_active_metrics, $assigned_lookup),
-      );
+    $general_metrics = array();
+    foreach ((array)$active_metrics as $m) {
+      if (!empty($mandatory_lookup[(int)$m->id])) continue;
+      $id = (int)$m->id;
+      $status = !empty($approved_lookup[$id]) ? 'Complete' : 'Uncompleted';
+      $m->label = $m->metric_code . ' – ' . $m->metric_title . ' [' . $status . ']';
+      $general_metrics[] = $m;
     }
 
     return View::render('evidence-form', array(
+      'active' => 'new',
       'notice' => Notices::get($user_id),
-      'years' => $years,
-      'metric_catalog' => $metric_catalog,
+      'year' => $year,
+      'mandatory_metrics' => $formatted_mandatory,
+      'general_metrics' => $general_metrics,
+      'no_data_ids' => array_map('intval', (array)$no_data_ids),
     ));
-  }
-
-  private static function formatMetrics($metrics, $approved_lookup) {
-    $out = array();
-
-    foreach ((array)$metrics as $m) {
-      $status_label = !empty($approved_lookup[(int)$m->metric_id]) ? 'Complete' : 'Uncompleted';
-
-      $out[] = array(
-        'id' => (int)$m->metric_id,
-        'sdg_number' => (int)$m->sdg_number,
-        'metric_code' => $m->metric_code,
-        'metric_title' => $m->metric_title,
-        'metric_question' => $m->metric_question,
-        'metric_note' => $m->metric_note,
-        'label' => 'SDG ' . $m->sdg_number . ' – ' . $m->metric_code . ' – ' . $m->metric_title . ' [' . $status_label . ']',
-      );
-    }
-
-    return $out;
-  }
-
-  private static function formatGeneralMetrics($metrics, $assigned_lookup) {
-    $out = array();
-
-    foreach ((array)$metrics as $m) {
-      if (!empty($assigned_lookup[(int)$m->id])) {
-        continue;
-      }
-
-      $out[] = array(
-        'id' => (int)$m->id,
-        'sdg_number' => (int)$m->sdg_number,
-        'metric_code' => $m->metric_code,
-        'metric_title' => $m->metric_title,
-        'metric_question' => $m->metric_question,
-        'metric_note' => $m->metric_note,
-        'label' => 'SDG ' . $m->sdg_number . ' – ' . $m->metric_code . ' – ' . $m->metric_title,
-      );
-    }
-
-    return $out;
   }
 }

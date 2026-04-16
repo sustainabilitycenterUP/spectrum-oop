@@ -10,7 +10,7 @@ include __DIR__ . '/layout-open.php';
 <div class="sp-page-header">
   <div>
     <h1>Buat Evidence Baru</h1>
-    <p>Isi form berikut untuk menyimpan draft atau submit evidence.</p>
+    <p>Mode MANDATORY + GENERAL. Tahun pelaporan dikunci ke <?php echo (int)$year; ?>.</p>
   </div>
   <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('my')); ?>">← Kembali</a>
 </div>
@@ -26,93 +26,85 @@ include __DIR__ . '/layout-open.php';
     </div>
   <?php endif; ?>
 
-  <form method="post" enctype="multipart/form-data" class="sp-form-wrapper">
+  <form method="post" enctype="multipart/form-data" class="sp-form-wrapper" id="sp-form">
     <?php wp_nonce_field('spectrum_save_evidence', 'spectrum_nonce'); ?>
+    <input type="hidden" name="year" value="<?php echo (int)$year; ?>">
 
-    <!-- TAHUN -->
     <div class="sp-form-row">
-      <label class="sp-label">Tahun Pelaporan *</label>
-      <select name="year" id="year_select" class="sp-select" required>
-        <option value="">-- Pilih Tahun --</option>
-        <?php foreach ((array)$years as $y): ?>
-          <option value="<?php echo esc_attr($y); ?>"><?php echo esc_html($y); ?></option>
-        <?php endforeach; ?>
-      </select>
-    </div>
-
-    <!-- KATEGORI -->
-    <div class="sp-form-row">
-      <label class="sp-label">Kategori Metric *</label>
-      <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap;">
-        <label style="display:flex;gap:6px;align-items:center;">
-          <input type="radio" name="metric_category" value="MANDATORY" required> Mandatory
-        </label>
-        <label style="display:flex;gap:6px;align-items:center;">
-          <input type="radio" name="metric_category" value="RECOMMENDED" required> Recommended
-        </label>
-        <label style="display:flex;gap:6px;align-items:center;">
-          <input type="radio" name="metric_category" value="GENERAL" required> General
-        </label>
+      <label class="sp-label">Kategori *</label>
+      <div style="display:flex;gap:18px;align-items:center;">
+        <label><input type="radio" name="metric_mode" value="MANDATORY" required checked> Mandatory</label>
+        <label><input type="radio" name="metric_mode" value="GENERAL" required> General</label>
       </div>
-      <div id="metric_category_help" class="sp-help" style="margin-top:6px;"></div>
     </div>
 
-    <!-- METRIC -->
-    <div class="sp-form-row">
-      <label class="sp-label">Metrik THE *</label>
-      <select name="metric_id" id="metric_select" class="sp-select" required disabled>
-        <option value="">-- Pilih Tahun & Kategori dulu --</option>
+    <div class="sp-form-row" id="sp-sdg-row" style="display:none;">
+      <label class="sp-label">Pilih SDG (untuk General) *</label>
+      <select name="general_sdg" id="general_sdg" class="sp-select">
+        <option value="">-- Pilih SDG --</option>
+        <?php for ($i=1; $i<=17; $i++): ?>
+          <option value="<?php echo (int)$i; ?>">SDG <?php echo (int)$i; ?></option>
+        <?php endfor; ?>
       </select>
     </div>
 
-    <!-- QUESTION & NOTE -->
-    <div id="metric_info" class="sp-metric-box" style="display:none;">
-      <div class="sp-metric-title">Metric Question</div>
-      <div id="metric_question"></div>
-      <div class="sp-metric-title" style="margin-top:8px;">Metric Note</div>
-      <div id="metric_note"></div>
+    <div class="sp-form-row">
+      <label class="sp-label">Metrik *</label>
+      <select name="metric_id" id="metric_select" class="sp-select" required>
+        <option value="">-- Pilih Metrik --</option>
+      </select>
     </div>
 
-    <!-- JUDUL -->
+    <div id="sp-metric-info" class="sp-metric-box" style="display:none;margin-bottom:12px;">
+      <div class="sp-metric-title">Metric Question</div>
+      <div id="sp-metric-question">-</div>
+      <div class="sp-metric-title" style="margin-top:8px;">Deskripsi Data yang Dibutuhkan</div>
+      <div id="sp-metric-desc">-</div>
+      <div class="sp-metric-title" style="margin-top:8px;">Catatan</div>
+      <div id="sp-metric-note">-</div>
+    </div>
+
+    <div class="sp-form-row" id="sp-no-data-wrap" style="display:none;">
+      <label style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" name="is_no_data" id="is_no_data" value="1"> Not Available
+      </label>
+      <div class="sp-help" style="margin-left:24px;">centang jika fungsi Anda tidak memiliki data yang diminta</div>
+    </div>
+
+    <div class="sp-form-row" id="sp-number-wrap" style="display:none;">
+      <label class="sp-label">Nilai Number *</label>
+      <input type="number" step="any" name="metric_number_value" id="metric_number_value" class="sp-input">
+      <div class="sp-help">Field ini wajib untuk metrik bertipe number/numeric.</div>
+    </div>
+
     <div class="sp-form-row">
       <label class="sp-label">Judul Evidence *</label>
-      <input type="text" name="title" class="sp-input" required>
+      <input type="text" name="title" id="title" class="sp-input">
     </div>
 
-    <!-- BENTUK EVIDENCE -->
     <div class="sp-form-row">
-      <label class="sp-label">Bentuk Evidence *</label>
+      <label class="sp-label">Sumber Evidence *</label>
       <div style="display:flex;gap:16px;align-items:center;">
-        <label style="display:flex;gap:6px;align-items:center;">
-          <input type="radio" name="source_type" value="link" required> Link
-        </label>
-        <label style="display:flex;gap:6px;align-items:center;">
-          <input type="radio" name="source_type" value="file" required> File
-        </label>
+        <label><input type="radio" name="source_type" value="link"> Link</label>
+        <label><input type="radio" name="source_type" value="file"> File</label>
       </div>
     </div>
 
-    <!-- LINK -->
-    <div class="sp-form-row sp-source sp-source-link" style="display:none;">
+    <div class="sp-form-row sp-source-link" style="display:none;">
       <label class="sp-label">Link URL *</label>
-      <input type="url" name="link_url" class="sp-input" placeholder="https://...">
-      <div class="sp-help">Catatan: pastikan link accessible dan bisa diakses sampai tahun 2025.</div>
+      <input type="url" name="link_url" id="link" class="sp-input" placeholder="https://...">
     </div>
 
-    <!-- FILE -->
-    <div class="sp-form-row sp-source sp-source-file" style="display:none;">
+    <div class="sp-form-row sp-source-file" style="display:none;">
       <label class="sp-label">Upload File *</label>
-      <input type="file" name="evidence_file" class="sp-input">
-      <div class="sp-help">File akan tersimpan di Media Library WordPress.</div>
+      <input type="file" name="evidence_file" id="file" class="sp-input">
     </div>
 
-    <!-- RINGKASAN -->
     <div class="sp-form-row">
       <label class="sp-label">Ringkasan Evidence *</label>
-      <textarea name="summary" class="sp-textarea" required></textarea>
+      <textarea name="summary" id="summary" class="sp-textarea"></textarea>
     </div>
 
-    <!-- ACTION -->
     <div class="sp-form-actions">
       <button type="submit" name="spectrum_action" value="draft" class="sp-btn-secondary">Simpan Draft</button>
       <button type="submit" name="spectrum_action" value="submit" class="sp-btn-primary">Submit</button>
@@ -122,115 +114,130 @@ include __DIR__ . '/layout-open.php';
 
 <script>
 (function(){
-  const metricCatalog = <?php echo wp_json_encode($metric_catalog); ?>;
+  const mandatory = <?php echo wp_json_encode(array_values((array)$mandatory_metrics)); ?>;
+  const general = <?php echo wp_json_encode(array_values((array)$general_metrics)); ?>;
+  const noDataIds = new Set(<?php echo wp_json_encode(array_values((array)$no_data_ids)); ?>.map(Number));
 
-  const yearSelect = document.getElementById('year_select');
+  const modeEls = document.querySelectorAll('input[name="metric_mode"]');
+  const sdgRow = document.getElementById('sp-sdg-row');
+  const sdgSelect = document.getElementById('general_sdg');
   const metricSelect = document.getElementById('metric_select');
-  const metricInfo = document.getElementById('metric_info');
-  const metricQuestion = document.getElementById('metric_question');
-  const metricNote = document.getElementById('metric_note');
-  const categoryHelp = document.getElementById('metric_category_help');
+  const noWrap = document.getElementById('sp-no-data-wrap');
+  const noData = document.getElementById('is_no_data');
+  const numberWrap = document.getElementById('sp-number-wrap');
+  const numberInput = document.getElementById('metric_number_value');
+  const metricInfo = document.getElementById('sp-metric-info');
+  const metricQuestion = document.getElementById('sp-metric-question');
+  const metricDesc = document.getElementById('sp-metric-desc');
+  const metricNote = document.getElementById('sp-metric-note');
+  const form = document.getElementById('sp-form');
 
-  const categoryRadios = document.querySelectorAll('input[name="metric_category"]');
+  const title = document.getElementById('title');
+  const summary = document.getElementById('summary');
+  const link = document.getElementById('link');
+  const file = document.getElementById('file');
+  const srcLinkWrap = document.querySelector('.sp-source-link');
+  const srcFileWrap = document.querySelector('.sp-source-file');
   const sourceRadios = document.querySelectorAll('input[name="source_type"]');
 
-  const linkWrap = document.querySelector('.sp-source-link');
-  const fileWrap = document.querySelector('.sp-source-file');
-  const linkInput = document.querySelector('input[name="link_url"]');
-  const fileInput = document.querySelector('input[name="evidence_file"]');
-
-  function getSelectedCategory() {
-    const checked = document.querySelector('input[name="metric_category"]:checked');
-    return checked ? checked.value : '';
+  function getMode(){
+    const checked = document.querySelector('input[name="metric_mode"]:checked');
+    return checked ? checked.value : 'MANDATORY';
   }
 
-  function setCategoryHelp(category) {
-    let text = '';
-    if (category === 'MANDATORY') {
-      text = 'Metric wajib untuk fungsi Anda. Prioritaskan metric dengan status Uncompleted.';
-    } else if (category === 'RECOMMENDED') {
-      text = 'Metric yang direkomendasikan untuk memperkuat coverage evidence fungsi Anda.';
-    } else if (category === 'GENERAL') {
-      text = 'Metric terbuka di luar assignment fungsi Anda.';
-    }
-    categoryHelp.textContent = text;
-  }
+  function rebuildMetric() {
+    const mode = getMode();
+    metricSelect.innerHTML = '<option value="">-- Pilih Metrik --</option>';
+    noWrap.style.display = (mode === 'MANDATORY') ? '' : 'none';
+    if (mode !== 'MANDATORY') noData.checked = false;
 
-  function rebuildMetricOptions() {
-    const year = yearSelect.value;
-    const category = getSelectedCategory();
+    const items = mode === 'MANDATORY'
+      ? mandatory
+      : general.filter(m => String(m.sdg_number) === String(sdgSelect.value || ''));
 
-    metricSelect.innerHTML = '';
-    metricSelect.disabled = true;
-    metricInfo.style.display = 'none';
-
-    if (!year || !category) {
+    items.forEach(item => {
+      const id = Number(item.metric_id || item.id);
       const opt = document.createElement('option');
-      opt.value = '';
-      opt.textContent = '-- Pilih Tahun & Kategori dulu --';
-      metricSelect.appendChild(opt);
-      return;
-    }
-
-    setCategoryHelp(category);
-
-    const items = (metricCatalog[year] && metricCatalog[year][category]) ? metricCatalog[year][category] : [];
-    const opt0 = document.createElement('option');
-    opt0.value = '';
-    opt0.textContent = items.length ? '-- Pilih Metrik --' : '-- Tidak ada metrik tersedia --';
-    metricSelect.appendChild(opt0);
-
-    items.forEach(function(item){
-      const opt = document.createElement('option');
-      opt.value = item.id;
-      opt.textContent = item.label;
+      opt.value = id;
+      opt.textContent = item.label || `${item.metric_code} – ${item.metric_title}${noDataIds.has(id) ? ' [NO]' : ''}`;
       opt.dataset.question = item.metric_question || '';
+      opt.dataset.desc = item.metric_desc || '';
       opt.dataset.note = item.metric_note || '';
+      opt.dataset.type = (item.metric_type || '').toLowerCase();
       metricSelect.appendChild(opt);
     });
 
-    metricSelect.disabled = items.length === 0;
+    onMetricChange();
+  }
+
+  function updateSourceMode() {
+    const src = document.querySelector('input[name="source_type"]:checked');
+    if (!src || src.value === 'link') {
+      srcLinkWrap.style.display = '';
+      srcFileWrap.style.display = 'none';
+    } else {
+      srcLinkWrap.style.display = 'none';
+      srcFileWrap.style.display = '';
+    }
+  }
+
+  function syncRequired() {
+    const no = !!noData.checked;
+    const selectedOpt = metricSelect.options[metricSelect.selectedIndex];
+    const type = selectedOpt ? (selectedOpt.dataset.type || '') : '';
+    const isNumber = (type === 'numeric' || type === 'number');
+    title.required = !no;
+    summary.required = !no;
+    numberWrap.style.display = isNumber ? '' : 'none';
+    numberInput.required = !no && isNumber;
+    if (!isNumber) numberInput.value = '';
+    const src = document.querySelector('input[name="source_type"]:checked');
+    if (!src || src.value === 'link') {
+      link.required = !no;
+      file.required = false;
+    } else {
+      file.required = !no;
+      link.required = false;
+    }
   }
 
   function onMetricChange() {
-    const opt = metricSelect.options[metricSelect.selectedIndex];
-    if (!opt || !opt.value) {
+    const selectedOpt = metricSelect.options[metricSelect.selectedIndex];
+    if (!selectedOpt || !selectedOpt.value) {
       metricInfo.style.display = 'none';
+      syncRequired();
       return;
     }
-
-    metricQuestion.innerHTML = opt.dataset.question || '-';
-    metricNote.innerHTML = opt.dataset.note || '-';
-    metricInfo.style.display = 'block';
+    metricQuestion.textContent = selectedOpt.dataset.question || '-';
+    metricDesc.textContent = selectedOpt.dataset.desc || '-';
+    metricNote.textContent = selectedOpt.dataset.note || '-';
+    metricInfo.style.display = '';
+    syncRequired();
   }
 
-  function setSourceMode(mode) {
-    if (mode === 'link') {
-      linkWrap.style.display = '';
-      fileWrap.style.display = 'none';
-      linkInput.required = true;
-      fileInput.required = false;
-      fileInput.value = '';
-    } else if (mode === 'file') {
-      linkWrap.style.display = 'none';
-      fileWrap.style.display = '';
-      linkInput.required = false;
-      fileInput.required = true;
-      linkInput.value = '';
-    }
-  }
+  modeEls.forEach(el => el.addEventListener('change', function(){
+    sdgRow.style.display = (getMode() === 'GENERAL') ? '' : 'none';
+    rebuildMetric();
+  }));
 
-  yearSelect.addEventListener('change', rebuildMetricOptions);
-  categoryRadios.forEach(function(r){
-    r.addEventListener('change', rebuildMetricOptions);
-  });
+  sdgSelect.addEventListener('change', rebuildMetric);
   metricSelect.addEventListener('change', onMetricChange);
+  noData.addEventListener('change', syncRequired);
+  sourceRadios.forEach(r => r.addEventListener('change', function(){ updateSourceMode(); syncRequired(); }));
 
-  sourceRadios.forEach(function(r){
-    r.addEventListener('change', function(){
-      setSourceMode(r.value);
-    });
+  form.addEventListener('submit', function(e){
+    const mode = getMode();
+    if (mode === 'GENERAL' && !sdgSelect.value) {
+      alert('Pilih SDG dulu untuk kategori General.');
+      e.preventDefault();
+      return;
+    }
   });
+
+  sdgRow.style.display = 'none';
+  rebuildMetric();
+  updateSourceMode();
+  syncRequired();
 })();
 </script>
 

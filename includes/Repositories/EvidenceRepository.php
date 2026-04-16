@@ -36,6 +36,14 @@ final class EvidenceRepository {
     $em = Db::table('spectrum_evidence_metric');
     $m  = Db::table('spectrum_metric');
 
+    $select_extra = '';
+    if (self::hasColumn('numeric_value')) {
+      $select_extra .= ', e.numeric_value';
+    }
+    if (self::hasColumn('attachment_id')) {
+      $select_extra .= ', e.attachment_id';
+    }
+
     $where = "WHERE e.submitter_id = %d";
     $params = array((int)$submitter_id);
 
@@ -60,8 +68,9 @@ final class EvidenceRepository {
     }
 
     $sql = "
-      SELECT e.id, e.year, e.title, e.status, e.unit_code, e.updated_at, e.created_at,
-             m.sdg_number, m.metric_code
+      SELECT e.id, e.year, e.title, e.summary, e.status, e.unit_code, e.link_url, e.updated_at, e.created_at
+             {$select_extra},
+             m.sdg_number, m.metric_code, m.metric_title, m.metric_question
       FROM {$e} e
       LEFT JOIN {$em} em ON em.evidence_id = e.id
       LEFT JOIN {$m}  m  ON m.id = em.metric_id
@@ -80,6 +89,17 @@ final class EvidenceRepository {
       "SELECT DISTINCT year FROM {$t} WHERE submitter_id = %d ORDER BY year DESC",
       (int)$submitter_id
     ));
+  }
+
+
+  public static function hasColumn($column) {
+    global $wpdb;
+    $t = self::table();
+    $col = sanitize_key($column);
+    if ($col === '') return false;
+    $sql = $wpdb->prepare("SHOW COLUMNS FROM {$t} LIKE %s", $col);
+    $res = $wpdb->get_var($sql);
+    return !empty($res);
   }
 
   public static function insert($data) {
@@ -105,23 +125,30 @@ final class EvidenceRepository {
   public static function listForReview($status = '') {
     global $wpdb;
     $t = self::table();
+    $em = Db::table('spectrum_evidence_metric');
+    $m = Db::table('spectrum_metric');
 
     if ($status) {
       return $wpdb->get_results($wpdb->prepare(
-        "SELECT id, year, title, unit_code, status, updated_at, created_at
-         FROM {$t}
-         WHERE status=%s
-         ORDER BY updated_at DESC, created_at DESC",
+        "SELECT e.id, e.unit_code, e.status, e.updated_at, e.created_at,
+                m.sdg_number, m.metric_code, m.metric_title
+         FROM {$t} e
+         LEFT JOIN {$em} em ON em.evidence_id = e.id
+         LEFT JOIN {$m} m ON m.id = em.metric_id
+         WHERE e.status=%s
+         ORDER BY e.updated_at DESC, e.created_at DESC",
         $status
       ));
     }
 
-    // default queue: hanya SUBMITTED
     return $wpdb->get_results(
-      "SELECT id, year, title, unit_code, status, updated_at, created_at
-       FROM {$t}
-       WHERE status='SUBMITTED'
-       ORDER BY updated_at DESC, created_at DESC"
+      "SELECT e.id, e.unit_code, e.status, e.updated_at, e.created_at,
+              m.sdg_number, m.metric_code, m.metric_title
+       FROM {$t} e
+       LEFT JOIN {$em} em ON em.evidence_id = e.id
+       LEFT JOIN {$m} m ON m.id = em.metric_id
+       WHERE e.status='SUBMITTED'
+       ORDER BY e.updated_at DESC, e.created_at DESC"
     );
   }
 }

@@ -50,6 +50,7 @@ final class EvidenceDetailShortcode {
     }
 
     $selected_metric_id = EvidenceMetricRepository::getMetricIdByEvidence($evidence_id);
+    $selected_metric = $selected_metric_id ? MetricRepository::getMetricById($selected_metric_id) : null;
     $logs = LogRepository::listByEvidence($evidence_id);
 
     $file_url = '';
@@ -63,6 +64,7 @@ final class EvidenceDetailShortcode {
       'editable' => $editable,
       'metric_options' => $metric_options,
       'selected_metric_id' => $selected_metric_id,
+      'selected_metric' => $selected_metric,
       'years' => $years,
       'logs' => $logs,
       'file_url' => $file_url,

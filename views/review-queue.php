@@ -27,22 +27,17 @@ include __DIR__ . '/layout-open.php';
     <div style="padding:14px;color:#6b7280;">Belum ada evidence untuk direview.</div>
   <?php else: ?>
     <div style="width:100%;overflow-x:auto;">
-      <table class="sp-table">
+      <table class="sp-table sp-datatable">
         <thead>
-          <tr><th>Judul</th><th>Tahun</th><th>Unit</th><th>Status</th><th>Update</th><th>Aksi</th></tr>
+          <tr><th>SDG</th><th>Nomor Metrik</th><th>Judul Metrik</th><th>Unit</th><th>Aksi</th></tr>
         </thead>
         <tbody>
           <?php foreach ($rows as $r): ?>
             <tr>
-              <td>
-                <a href="<?php echo esc_url(Url::page('detail', array('evidence_id'=>$r->id))); ?>">
-                  <?php echo esc_html($r->title); ?>
-                </a>
-              </td>
-              <td><?php echo esc_html($r->year); ?></td>
+              <td><?php echo !empty($r->sdg_number) ? esc_html('SDG ' . $r->sdg_number) : '—'; ?></td>
+              <td><?php echo !empty($r->metric_code) ? esc_html($r->metric_code) : '—'; ?></td>
+              <td><?php echo !empty($r->metric_title) ? esc_html($r->metric_title) : '—'; ?></td>
               <td><?php echo esc_html($r->unit_code); ?></td>
-              <td><?php echo esc_html($r->status); ?></td>
-              <td><?php echo esc_html($r->updated_at); ?></td>
               <td>
                 <a class="sp-btn-secondary" href="<?php echo esc_url(Url::page('detail', array('evidence_id'=>$r->id))); ?>">Detail</a>
 
@@ -50,8 +45,17 @@ include __DIR__ . '/layout-open.php';
                   <?php wp_nonce_field('review_action_' . $r->id); ?>
                   <input type="hidden" name="review_action" value="approve">
                   <input type="hidden" name="evidence_id" value="<?php echo (int)$r->id; ?>">
-                  <textarea name="review_notes" placeholder="Catatan (opsional)"
-                    style="width:220px;vertical-align:middle;border-radius:8px;border:1px solid #ccc;padding:6px;font-size:12px;"></textarea>
+                  <select name="review_score" required
+                    style="min-width:120px;vertical-align:middle;border-radius:8px;border:1px solid #ccc;padding:6px;font-size:12px;">
+                    <option value="">Score</option>
+                    <option value="1">★☆☆☆☆ (1)</option>
+                    <option value="2">★★☆☆☆ (2)</option>
+                    <option value="3">★★★☆☆ (3)</option>
+                    <option value="4">★★★★☆ (4)</option>
+                    <option value="5">★★★★★ (5)</option>
+                  </select>
+                  <textarea name="review_notes" placeholder="Catatan approve (opsional)"
+                    style="width:200px;vertical-align:middle;border-radius:8px;border:1px solid #ccc;padding:6px;font-size:12px;"></textarea>
                   <button class="sp-btn-primary" style="margin-left:6px;">Approve</button>
                 </form>
 
@@ -59,6 +63,9 @@ include __DIR__ . '/layout-open.php';
                   <?php wp_nonce_field('review_action_' . $r->id); ?>
                   <input type="hidden" name="review_action" value="reject">
                   <input type="hidden" name="evidence_id" value="<?php echo (int)$r->id; ?>">
+                  <textarea name="review_notes" placeholder="Alasan reject (wajib)"
+                    required
+                    style="width:220px;vertical-align:middle;border-radius:8px;border:1px solid #ccc;padding:6px;font-size:12px;"></textarea>
                   <button class="sp-btn-secondary" style="margin-left:6px;">Reject</button>
                 </form>
               </td>
