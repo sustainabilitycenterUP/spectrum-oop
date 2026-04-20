@@ -29,10 +29,11 @@ Dokumen ini untuk mengisi data agar:
 
 ```sql
 INSERT INTO wp_spectrum_metric
-  (sdg_number, metric_code, metric_type, metric_title, metric_question, metric_note, is_active_default, created_at, updated_at)
+  (sdg_number, metric_code, metric_type, metric_title, metric_question, metric_desc, metric_note, is_active_default, created_at, updated_at)
 VALUES
-  (3, '3.2.1', 'initiatives', 'Student health programme', 'Does your university provide ...?', 'Year: 2026', 1, NOW(), NOW()),
-  (4, '4.3.2', 'numeric', 'Graduate employability', NULL, 'Year: 2026', 1, NOW(), NOW());
+  (3, '3.2.1', 'initiatives', 'Student health programme', 'Does your university provide ...?', 'Rekapan jumlah mahasiswa (Perempuan dan Laki-laki) di setiap Prodi yang yudisium di TA tahun akademik yang diminta', 'Year: 2026', 1, NOW(), NOW()),
+  (4, '4.3.2', 'numeric', 'Graduate employability', NULL, 'Informasi/Pengumuman/Artikel/Berita mengenai kegiatan yang diselenggarakan kampus dan terbuka untuk masyarakat umum, seperti: Kuliah umum (public lecture), Seminar/pelatihan keterampilan, 
+Workshop, literasi digital, dan lainnya', NULL, 1, NOW(), NOW());
 ```
 
 > Tips: gunakan `metric_code` konsisten dengan dokumen THE untuk memudahkan tracing.
@@ -55,15 +56,15 @@ SET is_active = 1, updated_at = NOW()
 WHERE year = 2026 AND metric_id IN (101,102);
 ```
 
-### Step C — plot metric ke fungsi (mandatory/recommended)
+### Step C — plot metric ke fungsi (mandatory)
 
 ```sql
--- dirdik: 1 mandatory + 1 recommended
+-- dirdik: 1 mandatory 
 INSERT INTO wp_spectrum_function_metric_assignment
   (unit_code, metric_id, year, category, created_at, updated_at)
 VALUES
   ('dirdik', 101, 2026, 'MANDATORY', NOW(), NOW()),
-  ('dirdik', 102, 2026, 'RECOMMENDED', NOW(), NOW());
+  ('dirdik', 102, 2026, 'MANDATORY', NOW(), NOW());
 ```
 
 ---
@@ -108,7 +109,6 @@ Setelah data benar:
 
 1. Halaman **Buat Evidence Baru**:
    - kategori `MANDATORY` menampilkan metric assignment mandatory,
-   - kategori `RECOMMENDED` menampilkan assignment recommended,
    - kategori `GENERAL` menampilkan metric aktif yang tidak diassign ke unit tsb.
 
 2. Dashboard **Progress per Unit**:
