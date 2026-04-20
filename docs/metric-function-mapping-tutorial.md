@@ -1,6 +1,6 @@
 # Tutorial Plotting Metric ke Fungsi (Mandatory & Recommended)
 
-Dokumen ini untuk mengisi data nyata (bukan dummy) agar:
+Dokumen ini untuk mengisi data agar:
 - metrik aktif per tahun tersimpan di `wp_spectrum_year_metric`,
 - metrik diplot ke fungsi/unit di `wp_spectrum_function_metric_assignment`,
 - form evidence menampilkan kategori `MANDATORY`, `RECOMMENDED`, dan `GENERAL` sesuai setup.
