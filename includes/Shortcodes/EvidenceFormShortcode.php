@@ -20,7 +20,9 @@ final class EvidenceFormShortcode {
 
     $user_id = Auth::userId();
     $unit_code = Auth::unitCode($user_id);
-    $year = 2027;
+    $requested_year = isset($_GET['year']) ? (int)$_GET['year'] : 0;
+    $latest_assigned_year = FunctionMetricAssignmentRepository::getLatestAssignedYearByUnit($unit_code);
+    $year = $requested_year > 0 ? $requested_year : ($latest_assigned_year > 0 ? $latest_assigned_year : (int)current_time('Y'));
 
     $mandatory_metrics = FunctionMetricAssignmentRepository::getAssignedMetricsByUnitAndYear($unit_code, $year, 'MANDATORY');
     $mandatory_ids = FunctionMetricAssignmentRepository::getAssignedMetricIdsByUnitAndYear($unit_code, $year);

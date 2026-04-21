@@ -21,9 +21,12 @@ final class EvidenceService {
     $summary = isset($_POST['summary']) ? sanitize_textarea_field($_POST['summary']) : '';
     $link    = isset($_POST['link_url']) ? esc_url_raw($_POST['link_url']) : '';
     $metric_id = isset($_POST['metric_id']) ? (int)$_POST['metric_id'] : 0;
-    $metric_number_value = (isset($_POST['metric_number_value']) && $_POST['metric_number_value'] !== '')
-      ? (float)$_POST['metric_number_value']
-      : null;
+    $has_metric_number_value = array_key_exists('metric_number_value', $_POST);
+    $metric_number_value = null;
+    if ($has_metric_number_value) {
+      $metric_number_raw = isset($_POST['metric_number_value']) ? trim((string)wp_unslash($_POST['metric_number_value'])) : '';
+      $metric_number_value = ($metric_number_raw === '') ? null : (float)$metric_number_raw;
+    }
 
     $target_status = (strpos($action, 'submit') !== false) ? 'SUBMITTED' : 'DRAFT';
     $unit_code = Auth::unitCode($user_id);
@@ -96,7 +99,7 @@ final class EvidenceService {
       'updated_at'    => $now,
     );
 
-    if (EvidenceRepository::hasColumn('numeric_value')) {
+    if (EvidenceRepository::hasColumn('numeric_value') && $has_metric_number_value) {
       $update_data['numeric_value'] = $metric_number_value;
     }
     if (EvidenceRepository::hasColumn('attachment_id')) {
