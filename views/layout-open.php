@@ -17,10 +17,13 @@ $active = isset($active) ? $active : '';
   <header class="spectrum-header">
     <div class="spectrum-header-inner">
       <a class="sp-brand" href="<?php echo esc_url(\Spectrum\Evidence\Core\Url::page('dashboard')); ?>" style="text-decoration:none;color:inherit;">
-        <div class="sp-brand-logo">S</div>
-        <div>
-          <div class="sp-brand-title">SPECTRUM</div>
-          <div class="sp-brand-sub">Evidence THE &amp; Sustainability Dashboard</div>
+        <div class="sp-brand-block">
+          <img
+            class="sp-brand-logo-image"
+            src="<?php echo esc_url('https://super.universitaspertamina.ac.id/wp-content/uploads/2026/04/spectrum-logo.png'); ?>"
+            alt="Spectrum Logo"
+          />
+          <div class="sp-brand-sub">SDG PERFORMANCE EVALUATION,<br>COMPLIANCE TRACKING, AND REPORTING UNIFIED MONITOR</div>
         </div>
       </a>
       <div class="sp-header-right">

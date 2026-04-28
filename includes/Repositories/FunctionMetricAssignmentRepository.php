@@ -112,6 +112,19 @@ final class FunctionMetricAssignmentRepository {
     ", $unit_code, (int)$year));
   }
 
+  public static function getLatestAssignedYearByUnit($unit_code) {
+    global $wpdb;
+    $t = self::table();
+
+    $year = $wpdb->get_var($wpdb->prepare("
+      SELECT MAX(year)
+      FROM {$t}
+      WHERE unit_code = %s
+    ", $unit_code));
+
+    return (int)$year;
+  }
+
   public static function countAssignmentsByUnitYearCategory($unit_code, $year, $category) {
     global $wpdb;
     $t = self::table();

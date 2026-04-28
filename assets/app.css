@@ -13,8 +13,8 @@
 .spectrum-header{background:#fff;border-radius:0 0 20px 20px;border-bottom:1px solid var(--sp-border-subtle);box-shadow:0 4px 12px rgba(15,23,42,.04);margin-bottom:18px;}
 .spectrum-header-inner{max-width:none;margin:0;padding:12px 24px 12px 0;display:flex;align-items:center;justify-content:space-between;gap:16px;}
 .sp-brand{display:flex;align-items:center;gap:10px;}
-.sp-brand-logo{width:34px;height:34px;border-radius:12px;background:var(--sp-primary-soft);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--sp-primary);font-size:18px;}
-.sp-brand-title{font-weight:650;font-size:18px;letter-spacing:.02em;}
+.sp-brand-block{display:flex;flex-direction:column;gap:6px;}
+.sp-brand-logo-image{display:block;width:auto;max-width:260px;height:52px;object-fit:contain;object-position:left center;}
 .sp-brand-sub{font-size:11px;color:var(--sp-text-muted);}
 .sp-header-right{display:flex;align-items:center;gap:12px;font-size:13px;}
 .sp-role-badge{padding:2px 8px;border-radius:999px;border:1px solid #d1d5db;font-size:11px;color:var(--sp-text-muted);background:#fff;}
@@ -136,6 +136,7 @@ table.sp-table{width:100%;border-collapse:collapse;font-size:13px;min-width:760p
   .sp-main{flex-direction:column;padding:16px;}
   .sp-sidebar{width:100%;}
   .spectrum-header-inner{padding:10px 16px;}
+  .sp-brand-logo-image{height:42px;max-width:220px;}
   .sp-detail-wrapper{grid-template-columns:1fr;}
   table.sp-table{min-width:680px;}
 }
